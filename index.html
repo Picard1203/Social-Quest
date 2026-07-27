@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Social Quest">
+<meta name="theme-color" content="#0d0c14">
+<title>Social Quest</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%230d0c14'/%3E%3Ctext x='90' y='122' font-size='96' text-anchor='middle'%3E%E2%9A%94%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Social%20Quest%22%2C%22short_name%22%3A%22Social%20Quest%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230d0c14%22%2C%22theme_color%22%3A%22%230d0c14%22%7D">
+<style>
+:root{--bg:#0d0c14;--sf:#161521;--bd:#252337;--gold:#e2b340;--acc:#f0a05a;--grn:#56b88a;--tx:#d8d5e8;--dim:#8a879e;--mut:#5e5b72;--red:#eb6f92}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding-bottom:env(safe-area-inset-bottom)}
+#app{max-width:560px;margin:0 auto}
+header{background:var(--sf);border-bottom:1px solid var(--bd);padding:calc(12px + env(safe-area-inset-top)) 16px 0;position:sticky;top:0;z-index:50}
+h1{font:700 19px/1.2 Georgia,serif;color:var(--gold);margin:0;letter-spacing:.5px}
+.sub{font-size:11px;color:var(--dim);margin-top:2px}
+.hrow{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.pill{background:var(--bg);border-radius:8px;padding:5px 12px;text-align:right}
+.pill b{color:var(--grn);font-size:17px}
+.pill span{font-size:8px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;display:block}
+.xprow{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-bottom:3px}
+.bar{height:5px;background:var(--bg);border-radius:3px;overflow:hidden;margin-bottom:8px}
+.bar>i{display:block;height:100%;border-radius:3px;transition:width .4s}
+nav{display:flex}
+nav button{flex:1;background:none;border:0;border-bottom:2px solid transparent;color:var(--mut);padding:8px 2px 10px;font-size:15px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;font-family:inherit}
+nav button span{font-size:9px}
+nav button.on{color:var(--gold);border-bottom-color:var(--gold)}
+main{padding:16px}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:14px}
+.lbl{font:600 11px/1 Georgia,serif;color:var(--gold);letter-spacing:1.5px}
+.ttl{font:600 17px/1.3 Georgia,serif;margin:6px 0 3px}
+.src{font-size:12px;color:var(--dim);margin-bottom:10px}
+.why{background:var(--bg);border-radius:8px;padding:12px;margin-bottom:10px;font-size:13px;line-height:1.6}
+.why b{display:block;font-size:10px;letter-spacing:1.2px;margin-bottom:4px}
+.lis{font-size:13px;color:var(--acc);font-style:italic;line-height:1.5;margin-bottom:12px}
+a.link{display:inline-block;padding:8px 14px;background:var(--bg);border:1px solid var(--bd);border-radius:6px;color:var(--acc);text-decoration:none;font-size:13px;margin-bottom:10px}
+button.b{display:block;width:100%;padding:12px 0;border:0;border-radius:8px;font:600 14px inherit;cursor:pointer;color:var(--bg);background:linear-gradient(135deg,#8a6b10,var(--gold))}
+button.g{background:linear-gradient(135deg,#3d7a5c,var(--grn))}
+button.done{background:var(--bg);color:var(--grn);border:1px solid #56b88a44}
+button.sm{padding:8px 14px;background:none;border:1px solid var(--bd);border-radius:6px;color:var(--acc);font:13px inherit;cursor:pointer;width:auto;display:inline-block;margin:0 6px 6px 0}
+.tier{border:1px solid var(--bd);border-radius:8px;padding:12px;margin-bottom:8px}
+.tier.pick{border-color:var(--grn)}
+.tier.dim{opacity:.35}
+.trow{display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:4px}
+.tier p{margin:0 0 8px;font-size:13px;line-height:1.55}
+textarea,input,select{font:16px inherit;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:6px;padding:10px;width:100%;resize:vertical}
+select{width:auto;padding:6px}
+.nav2{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.nav2 button{width:44px;height:38px;background:var(--sf);border:1px solid var(--bd);border-radius:8px;color:var(--dim);font-size:16px;cursor:pointer}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:1px;margin-left:8px}
+.jump{width:100%;padding:8px 0;background:#e2b34011;border:1px solid #e2b34033;border-radius:6px;color:var(--gold);font:500 12px inherit;cursor:pointer;margin-bottom:14px}
+.sec{font:700 17px Georgia,serif;color:var(--gold);margin:0 0 10px}
+.arc{border-left:3px solid;padding-left:12px;margin-bottom:14px}
+.arc h3{font:600 15px Georgia,serif;margin:0 0 4px}
+.arc p{font-size:12px;color:var(--dim);line-height:1.6;margin:0 0 8px}
+.srow{display:flex;gap:8px;align-items:center;padding:7px 0;border-top:1px solid var(--bd);font-size:13px;cursor:pointer}
+.srow.lock{opacity:.35;cursor:default}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px}
+.stat{background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:12px;text-align:center}
+.stat b{display:block;font:700 20px Georgia,serif;color:var(--gold)}
+.stat span{font-size:10px;color:var(--dim)}
+.ach{display:inline-flex;gap:6px;align-items:center;background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;margin:0 6px 6px 0;font-size:12px}
+.ach.off{opacity:.28}
+.ai{margin-top:10px;padding:12px;background:var(--bg);border:1px solid #a17bf544;border-radius:8px;font-size:13px;line-height:1.65;white-space:pre-wrap}
+.toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(12px + env(safe-area-inset-top));background:var(--sf);border:1px solid #e2b34055;color:var(--gold);padding:10px 18px;border-radius:8px;font-size:13px;z-index:99;max-width:92%;text-align:center}
+.ovl{position:fixed;inset:0;background:rgba(13,12,20,.93);z-index:100;display:flex;align-items:center;justify-content:center}
+.lv{background:var(--sf);border:2px solid var(--gold);border-radius:16px;padding:34px 40px;text-align:center}
+.lv h2{font:700 24px Georgia,serif;color:var(--gold);letter-spacing:5px;margin:10px 0 14px}
+.note{font-size:12px;color:var(--mut);line-height:1.7}
+.warn{border-color:#eb6f9244;background:transparent}
+</style>
+</head>
+<body><div id="app"><header id="hd"></header><main id="mn"></main></div>
+<script>
+const SP=q=>'https://open.spotify.com/search/'+encodeURIComponent(q);
+const AU=q=>'https://www.audible.com/search?keywords='+encodeURIComponent(q);
+const YT=q=>'https://www.youtube.com/results?search_query='+encodeURIComponent(q);
+
+const ARCS=[
+{n:"Recalibration",tag:"The map is wrong",ic:"🧭",c:"#e2b340",sk:"Calibration",
+th:"Fix the instrument before running the experiment. Research shows you systematically underestimate how much people like you. Your fear that people recoil from your nerdiness is partly measurement error — and this arc proves it on your own data."},
+{n:"The Listener's Way",tag:"Attention is the rarest gift",ic:"👂",c:"#56b88a",sk:"Listening",
+th:"The most attractive social skill is making someone feel heard, and it's the easiest to train because it needs presence, not wit. Carnegie in full, plus the science showing empathy grows with practice at any age."},
+{n:"The Craft of Conversation",tag:"A learnable system",ic:"💬",c:"#5aa7f0",sk:"Conversation",
+th:"Conversation is technique: openers, sparks, reading people, stories, humor. Captivate end to end — written by a self-described recovering awkward person who reverse-engineered social life like a lab problem."},
+{n:"Presence & Charisma",tag:"Warmth × competence",ic:"✨",c:"#e8c15a",sk:"Charisma",
+th:"Charisma decomposes into presence, power and warmth — trainable components, not birthright. Your body and voice carry most of the message; this arc tunes the signal you've never been taught to control."},
+{n:"The Inner Game",tag:"Non-neediness & a steady mind",ic:"🛡️",c:"#f0a05a",sk:"Inner Game",
+th:"Attraction flows from how you treat yourself: standards, emotion regulation, rejection tolerance, the ability to say no. Emotion regulation is a measured pillar of romantic competence. This arc is the hardest one."},
+{n:"The Open Visor",tag:"Vulnerability is armor",ic:"🔓",c:"#e06c9f",sk:"Openness",
+th:"Connection deepens exactly as fast as honest self-disclosure — and as your ability to hold someone else's feelings without fixing them. Logic-first people guard the inner world; this arc opens it deliberately."},
+{n:"Communities & Hosting",tag:"Build the room",ic:"🏛️",c:"#7ecfb4",sk:"Belonging",
+th:"Skills without a room to use them decay. Friendship takes roughly 50 hours to start and 200+ to deepen — leisure hours, not work hours. This arc builds the recurring space, then teaches you to host it."},
+{n:"Standing on Your Own",tag:"A good life now",ic:"🌱",c:"#9fd356",sk:"Groundedness",
+th:"Most of this journey happens while single. Solitude research shows alone and lonely are different states, and that autonomy and authenticity grow in solitude. Build a life good enough that the search isn't desperate."},
+{n:"The Science of Attraction",tag:"Escape the polite trap",ic:"🧲",c:"#f76f8e",sk:"Attraction",
+th:"Hall's research found five flirting styles, and polite flirts — respectful, hands-off, cautious analytical men — get read as friendly and land in the friend zone. That's a signals problem, and signals are engineering."},
+{n:"The Courtship",tag:"Dating, by the data",ic:"💌",c:"#a17bf5",sk:"Courtship",
+th:"Behavioral science on modern dating from Hinge's own researcher: your dating tendency, profiles as honest filters, texting toward meeting, first-date design, and the mechanism that manufactures closeness."},
+{n:"Attachment",tag:"Know your pattern",ic:"🧬",c:"#6fc2c9",sk:"Attachment",
+th:"Anxious, avoidant, secure — your attachment style predicts your relationship pattern before it happens. Knowing yours, reading theirs, and avoiding the anxious-avoidant trap is the highest-leverage relationship science there is."},
+{n:"Choosing",tag:"Your checklist is lying",ic:"🎯",c:"#c9a0dc",sk:"Judgment",
+th:"Across 11,196 couples, a partner's own traits explained only 5% of their partner's satisfaction — what happens between you explained far more. And stated ideal preferences fail to predict who you actually want after meeting them."},
+{n:"Body & Intimacy",tag:"Honest hands, clear words",ic:"🕯️",c:"#d98455",sk:"Intimacy",
+th:"Touch, escalation, consent and the actual science of sexuality — from the field's leading researcher rather than from pornography. Consent handled as what it is: the communication skill that makes touch confident instead of anxious."},
+{n:"Knowing When It's Wrong",tag:"The exit is a skill",ic:"🚩",c:"#e05263",sk:"Discernment",
+th:"Attachment teaches choosing well; this teaches spotting the relationship that's quietly harming you, and ending one without cruelty. Also: that breakups are survivable — the hidden fear that keeps hesitaters hesitating."},
+{n:"Love That Lasts",tag:"The endgame",ic:"🏰",c:"#c9a227",sk:"Bonding",
+th:"Gottman's lab watched couples for decades and can predict divorce from minutes of conversation. Learn what kills love and what sustains it before your first relationship — then the 85-year Harvard finding that closes the whole path."}];
+
+// step: a=arc, t=title, s=source, u=url, d=duration, w=why, l=listen for, m=[scout,knight,dragon]; cp=checkpoint
+const S=[
+// ARC 1
+{a:0,t:"How Others See You",s:"Hidden Brain — Erica Boothby (podcast)",u:SP("Hidden Brain How Others See You"),d:"51 min",
+w:"The journey opens by attacking your core belief. Boothby's liking gap research: people walk away from conversations underestimating how much the other person liked them — and the gap is widest in self-critical people.",
+l:"The roommates study, and why high-pressure settings like dating widen the illusion.",
+m:["After a conversation, write what you assume they thought of you. Label it: estimate, probably too low.","Ask one person you don't usually talk to a question about themselves. Note whether any catastrophe occurred.","Give someone a specific, genuine compliment face to face. Boothby's data: they land better than we predict."]},
+{a:0,t:"The Power of Tiny Interactions",s:"Hidden Brain — Gillian Sandstrom (podcast)",u:SP("Hidden Brain Relationships 2.0 Power of Tiny Interactions"),d:"1h 25m",
+w:"Sandstrom studies exactly what your first missions are: micro-conversations with weak ties. They lift mood and belonging far more than people predict, and a week of practice measurably shrinks the fear.",
+l:"The coffee shop study, and why people dread starting conversations but enjoy having them.",
+m:["Thank someone today using their name.","Have one 30-second exchange with a weak tie — canteen, guard, someone in line. Weather counts.","Start a conversation with a stranger and keep it alive past the opener with one follow-up question."]},
+{a:0,t:"What Makes Relationships Thrive",s:"Hidden Brain — Harry Reis (podcast)",u:SP("Hidden Brain What Makes Relationships Thrive"),d:"49 min",
+w:"Reis compresses 40 years of relationship science into one mechanic: perceived partner responsiveness — showing someone you understand, value and support what they said. It predicts thriving in friendship and in love.",
+l:"The definition of responsiveness, and how small acknowledgments compound over time.",
+m:["Reflect back what someone said before adding your own point.","Loop back to something someone told you days ago: how did that turn out?","Do both, in a conversation you started yourself."]},
+{a:0,cp:1,t:"Checkpoint I — Baseline",s:"Self-measurement",d:"10 min",
+w:"Baseline before the training block, like any experiment. These ratings become the chart you'll compare against fifteen times.",
+l:"Rate honestly, not optimistically. A low baseline makes progress visible later."},
+// ARC 2 — Carnegie x10 + Brooks + Zaki + CP
+{a:1,t:"How to Win Friends — Opening & Principle 1",s:"Dale Carnegie (Audible, book 1 of 4)",u:AU("How to Win Friends and Influence People Carnegie"),d:"~45 min",
+w:"The most-recommended people book ever written, and the quiet source most modern content recycles. Opens with the hardest principle: don't criticize, condemn or complain.",
+l:"Why criticism never changes behaviour, and what it does to the person receiving it.",
+m:["Catch one criticism before it leaves your mouth. Replace it with a question.","Go a full day without criticizing anyone, including yourself, out loud.","Someone annoys you today — find the thing they're doing well and say that instead."]},
+{a:1,t:"How to Win Friends — Honest Appreciation",s:"Dale Carnegie (Audible)",u:AU("How to Win Friends and Influence People Carnegie"),d:"~45 min",
+w:"Principle two: give honest, specific appreciation — the opposite of flattery, which is why most people are bad at it. Appreciation is attention made verbal.",
+l:"The line between appreciation and flattery, and why people can always tell.",
+m:["Tell one person something specific you appreciate about them.","Appreciate someone for something nobody else noticed.","Appreciate someone you find difficult, sincerely, to their face."]},
+{a:1,t:"How to Win Friends — Arouse an Eager Want",s:"Dale Carnegie (Audible)",u:AU("How to Win Friends and Influence People Carnegie"),d:"~45 min",
+w:"The pivot from your interests to theirs. Carnegie's core insight is unglamorous and load-bearing: people act on their wants, not yours, so start there.",
+l:"The fishing metaphor, and why 'what do I want' is the wrong opening question.",
+m:["Before one conversation, ask yourself what the other person wants from it.","Frame a request today entirely in terms of what the other person gets.","Persuade someone of something using only their reasons, never yours."]},
+{a:1,t:"How to Win Friends — Genuine Interest",s:"Dale Carnegie (Audible)",u:AU("How to Win Friends and Influence People Carnegie"),d:"~45 min",
+w:"The reframe that dissolves most social anxiety: stop trying to be interesting, become interested. It moves the spotlight off you, which is exactly where you don't want it.",
+l:"The dog metaphor, and the men who made friends by asking rather than performing.",
+m:["Ask someone about something they care about and don't steer it back to yourself.","Keep a conversation entirely on the other person for five minutes.","Do it with someone who intimidates you."]},
+{a:1,t:"How to Win Friends — Smile & Names",s:"Dale Carnegie (Audible)",u:AU("How to Win Friends and Influence People Carnegie"),d:"~45 min",
+w:"Two mechanics that sound trivial and aren't. A genuine smile changes how people read your intent before you speak, and a person's own name is the sweetest sound they know.",
+l:"Why the forced smile fails, and Carnegie's method for actually remembering names.",
+m:["Learn one new name and use it naturally once.","Use three people's names in conversation today.","Remember and use the name of someone you met only once before."]},
+{a:1,t:"How to Win Friends — Be a Good Listener",s:"Dale Carnegie (Audible)",u:AU("How to Win Friends and Influence People Carnegie"),d:"~45 min",
+w:"Carnegie's listening chapter is the practical manual for the responsiveness research from Arc 1 — written six decades before the studies proved him right.",
+l:"The botanist story: a man called a brilliant conversationalist who barely spoke.",
+m:["Aim for a 70/30 split in one conversation — them at 70.","Ask three follow-up questions in a row before offering your own view.","Have a ten-minute conversation whose only goal is that they leave feeling interesting."]},
+{a:1,t:"How to Win Friends — Talk in Their Terms",s:"Dale Carnegie (Audible)",u:AU("How to Win Friends and Influence People Carnegie"),d:"~45 min",
+w:"Talk about what they care about, and make them feel important sincerely. That last word is doing all the work: performed interest repels, real interest connects.",
+l:"How Carnegie prepared for meetings by researching the other person's passions.",
+m:["Before seeing someone, think of one topic they love and open with it.","Learn something new about someone you see often but barely know.","Find common ground with someone you assumed you had nothing in common with."]},
+{a:1,t:"How to Win Friends — You Can't Win an Argument",s:"Dale Carnegie (Audible)",u:AU("How to Win Friends and Influence People Carnegie"),d:"~45 min",
+w:"The chapter built for you. For a logic-first person this lands hard: winning the argument and keeping the relationship are usually different goals, and you have to pick.",
+l:"Why being proven wrong makes people dig in rather than update.",
+m:["Someone is wrong about something small today. Let it go, and log how it felt.","In a disagreement, state their side out loud, fairly, before your own.","Concede a point you could have won, on purpose, and watch what happens next."]},
+{a:1,t:"How to Win Friends — Admitting You're Wrong",s:"Dale Carnegie (Audible)",u:AU("How to Win Friends and Influence People Carnegie"),d:"~45 min",
+w:"Beginning with praise, admitting your own errors first, letting the other person save face. Counterintuitively, fast admission of error raises your standing rather than lowering it.",
+l:"Why saying it about yourself first disarms the person about to say it to you.",
+m:["Admit one small mistake openly to someone.","Admit a mistake before anyone points it out.","Apologize properly for something you've been quietly avoiding."]},
+{a:1,t:"How to Win Friends — Leading Without Resentment",s:"Dale Carnegie (Audible)",u:AU("How to Win Friends and Influence People Carnegie"),d:"~45 min",
+w:"The final section: correcting people without humiliating them, asking questions instead of giving orders, giving others a reputation to live up to. You'll use these while mentoring your recruit.",
+l:"Questions instead of commands, and why it changes compliance into ownership.",
+m:["Turn one instruction you'd normally give into a question.","Give someone a genuine reputation to live up to, out loud.","Correct someone's mistake in a way that leaves them feeling capable."]},
+{a:1,t:"Social Skills as the Road to Character",s:"Art of Manliness #938 — David Brooks (podcast)",u:SP("Art of Manliness Social Skills Road to Character David Brooks"),d:"~50 min",
+w:"Brooks reframes the whole project: social skill isn't manipulation, it's a moral craft — the discipline of making another person feel seen. If techniques ever feel fake to you, this resolves it.",
+l:"Illuminators versus diminishers, and how to ask bigger questions.",
+m:["Ask one bigger question instead of a logistics question.","Draw a quiet person into a group conversation and make space for them.","Ask someone something genuinely deep, and hold the silence until they really answer."]},
+{a:1,t:"The Empathy Gym",s:"Hidden Brain — Jamil Zaki (podcast)",u:SP("Hidden Brain You 2.0 Empathy Gym"),d:"53 min",
+w:"Zaki answers your deepest worry — that you missed the years everyone else practiced. Empathy is a muscle, not a fixed trait, and believing it's trainable measurably accelerates the growth.",
+l:"The mindset effect, and his finding that reading fiction increases empathy.",
+m:["Before responding to someone, silently name what they're probably feeling.","In a complaint or disagreement, voice their side out loud first.","Find someone having a hard day and just listen. No fixing unless asked."]},
+{a:1,cp:1,t:"Checkpoint II — The Listener",s:"Self-measurement",d:"10 min",
+w:"Second data point. From here the arc insight can read your journal and reflect patterns back at you.",
+l:"Compare against your baseline before you rate."},
+// ARC 3 — Captivate x10 + humor + mattering + CP
+{a:2,t:"Captivate — The Social Game Plan",s:"Vanessa Van Edwards (Audible, book 2 of 4)",u:AU("Captivate Vanessa Van Edwards"),d:"~45 min",
+w:"Van Edwards decoded social life like a lab problem after years of being the awkward one. The opening move is spatial: where you stand in a room decides who you meet before you say anything.",
+l:"Social sweet spots, and why the doorway and the bar are traps.",
+m:["In your next group setting, consciously choose where you stand.","Enter one social situation with a planned position and opener.","Work a room deliberately: position, approach, exit, repeat three times."]},
+{a:2,t:"Captivate — The First Five Minutes",s:"Vanessa Van Edwards (Audible)",u:AU("Captivate Vanessa Van Edwards"),d:"~45 min",
+w:"First impressions are decided fast and mostly nonverbally. The fixable parts are hands, posture and the approach itself — all engineering problems, all trainable tonight.",
+l:"Visible hands, the handshake research, and the triple nod.",
+m:["Keep your hands visible in one whole conversation.","Use a firm handshake with eye contact next time you meet someone.","Introduce yourself first to a stranger, hands visible, and hold eye contact through it."]},
+{a:2,t:"Captivate — Conversation Sparks",s:"Vanessa Van Edwards (Audible)",u:AU("Captivate Vanessa Van Edwards"),d:"~45 min",
+w:"The end of small-talk dread. Sparks are questions engineered to produce interest instead of autopilot, so you never again wonder what to say after hello.",
+l:"Why 'how are you' kills conversations, and the sparks that replace it.",
+m:["Replace one 'how are you' with: what was the highlight of your week?","Use a spark and one follow-up. Note whether the energy changed.","Open a conversation with a stranger using a spark."]},
+{a:2,t:"Captivate — The Highlight Principle",s:"Vanessa Van Edwards (Audible)",u:AU("Captivate Vanessa Van Edwards"),d:"~45 min",
+w:"Make the other person shine and they associate the feeling with you. It's Carnegie's appreciation with a mechanism attached, and it works on people who've heard every compliment.",
+l:"How to hand someone a highlight without it sounding like flattery.",
+m:["Give one person a genuine highlight in front of someone else.","Chase someone's spark topic for a full conversation.","Make someone visibly light up, and write down what you did."]},
+{a:2,t:"Captivate — Microexpressions",s:"Vanessa Van Edwards (Audible)",u:AU("Captivate Vanessa Van Edwards"),d:"~45 min",
+w:"Seven expressions appear on every face on earth, briefly, whether or not people want them to. Pattern recognition is your profession — this chapter turns it on human faces.",
+l:"The seven universal expressions and where each one shows.",
+m:["Spot one microexpression today. Just notice it.","Notice an expression that contradicts someone's words.","Respond gently to the real signal instead of the spoken one."]},
+{a:2,t:"Captivate — Decoding Personality",s:"Vanessa Van Edwards (Audible)",u:AU("Captivate Vanessa Van Edwards"),d:"~45 min",
+w:"A working model of personality dimensions you can estimate from behaviour, then adapt to. This is the closest thing to a character sheet for real people.",
+l:"The five dimensions, and how to guess someone's from a short conversation.",
+m:["Guess one person's personality style from observation.","Adapt one thing — pace, detail, energy — to match someone.","Predict how someone will react to something, then check whether you were right."]},
+{a:2,t:"Captivate — Appreciation Languages",s:"Vanessa Van Edwards (Audible)",u:AU("Captivate Vanessa Van Edwards"),d:"~45 min",
+w:"People receive care in different currencies. Giving yours instead of theirs is the most common way good intentions fail to land, in friendship and in love.",
+l:"The currencies, and how to spot which one someone actually uses.",
+m:["Identify one person's appreciation language.","Appreciate someone in their currency, not yours.","Ask someone directly how they like to be appreciated."]},
+{a:2,t:"Captivate — The Story Stack",s:"Vanessa Van Edwards (Audible)",u:AU("Captivate Vanessa Van Edwards"),d:"~45 min",
+w:"Stories are how humans transmit anything memorable. Hook, struggle, takeaway — a structure, which means it's practicable rather than a talent you either have or don't.",
+l:"The story stack, and why the struggle section is the part people feel.",
+m:["Answer one factual question with a 30-second story instead.","Tell a prepared story from your life and land the takeaway.","Tell a story that includes a small failure of yours."]},
+{a:2,t:"Captivate — Being Memorable",s:"Vanessa Van Edwards (Audible)",u:AU("Captivate Vanessa Van Edwards"),d:"~45 min",
+w:"Memorability isn't loudness. It's having a clear answer to what you do and what lights you up — which for you means talking about your interests without shrinking them first.",
+l:"Rewriting the 'what do you do' answer so it opens instead of closing.",
+m:["Write a new answer to 'what do you do' that invites a follow-up.","Use it on someone new.","Describe a nerd passion with full enthusiasm and no apology."]},
+{a:2,t:"Captivate — Leading & Ending Well",s:"Vanessa Van Edwards (Audible)",u:AU("Captivate Vanessa Van Edwards"),d:"~45 min",
+w:"Finishing the book means owning a full stack: position, open, read, connect, land, exit. Endings matter more than you'd expect — people remember the last thirty seconds.",
+l:"How to leave a conversation gracefully without seeming to escape.",
+m:["End one conversation on purpose, warmly, before it dies.","Exit a group conversation cleanly and join another.","Close a conversation by naming a next time you'll talk."]},
+{a:2,t:"The Science of Funny",s:"Peter McGraw — benign violation theory (talk)",u:YT("Peter McGraw benign violation theory what makes things funny"),d:"~18 min",
+w:"Humor is researched, not magic. McGraw's model — a violation that is simultaneously safe — gives an analytical mind a generator for playfulness instead of memorized jokes.",
+l:"Why the same line lands or dies depending on safety and timing.",
+m:["Spot one benign violation today and name why it worked.","Make one playful exaggeration or gentle tease in conversation.","Be the one who makes the room laugh when something small goes wrong."]},
+{a:2,t:"Mattering: Feeling Seen",s:"Hidden Brain — Gordon Flett (podcast)",u:SP("Hidden Brain Gordon Flett mattering"),d:"~50 min",
+w:"The capstone of the craft arcs: the deepest thing you can give anyone is the sense that they matter. Every technique so far ultimately serves this. Gentle heads-up — this episode discusses loneliness and depression directly.",
+l:"Mattering as a psychological buffer, and the small gestures that rebuild it.",
+m:["Remember one detail someone told you and bring it up later.","Appreciate something someone did that nobody acknowledged.","Do it for the person in your environment nobody thanks."]},
+{a:2,cp:1,t:"Checkpoint III — The Craftsman",s:"Self-measurement",d:"10 min",
+w:"Third data point. Check the prediction chart in Stats — the gap between predicted and actual discomfort usually starts closing around here.",
+l:"Rate, compare, and write one line about the biggest change so far."},
+// ARC 4
+{a:3,t:"The Charisma Myth — Decoded",s:"Olivia Fox Cabane — Talks at Google (free)",u:YT("Olivia Fox Cabane Charisma Leadership Imposter Syndrome Talks at Google"),d:"~55 min",
+w:"Cabane decomposes charisma into presence, power and warmth. Her Google talk delivers the framework free, which saves you an Audible credit for a book you need more later.",
+l:"The triad, and why presence is the rarest and cheapest to train.",
+m:["Have one conversation with your phone away and full attention on them.","When your mind drifts mid-conversation, use her cue: focus on the sensation in your toes.","Run a whole interaction consciously projecting warmth and presence together."]},
+{a:3,t:"Build Your Personal Charisma",s:"Olivia Fox Cabane — Stanford eCorner (free)",u:YT("Olivia Fox Cabane Build Your Personal Charisma Stanford entire talk"),d:"~50 min",
+w:"The longer Stanford talk, with the mental techniques behind the behaviour — including how to stop the internal discomfort that leaks out as awkwardness before you've said a word.",
+l:"Presence as the feeling that someone is entirely with you; distraction as the biggest charisma killer.",
+m:["Notice once today when your eyes drift over someone's shoulder. Bring them back.","Use one mental technique before a conversation you're dreading.","Run a difficult conversation using power and warmth deliberately."]},
+{a:3,t:"Cues — The Body Language of Warmth",s:"Vanessa Van Edwards (free videos)",u:YT("Vanessa Van Edwards cues warmth competence body language"),d:"~25 min",
+w:"Your words are a minority of the message. Warmth cues and competence cues are separate systems, and most anxious men accidentally broadcast neither.",
+l:"Warmth cues versus competence cues, and the anti-cues that quietly sabotage.",
+m:["Audit yourself once: hands, shoulders, gaze. Fix one anti-cue.","Use two warmth cues deliberately in one conversation.","Run a full interaction with open posture and visible hands. Watch for mirroring."]},
+{a:3,t:"Cues — Voice",s:"Vanessa Van Edwards (free videos)",u:YT("Vanessa Van Edwards vocal power confident voice cues"),d:"~20 min",
+w:"People judge confidence from voice within seconds, and the question-inflection at the end of statements leaks uncertainty constantly. Voice is more trainable than almost any other signal.",
+l:"Statement versus question inflection, pace, and the power of the pause.",
+m:["Record yourself saying three sentences. Listen once. That's the mission.","End your statements down in pitch today, especially opinions.","Pause two full seconds before answering a question in a group."]},
+{a:3,cp:1,t:"Checkpoint IV — Presence",s:"Self-measurement",d:"10 min",
+w:"Fourth data point. Body and voice are instruments you play now, not noise you leak.",
+l:"Rate and compare."},
+// ARC 5 — Models x5 + Kross + Neff + AoM say no + Paterson + CP
+{a:4,t:"Models — Non-Neediness",s:"Mark Manson (Audible, book 3 of 4)",u:AU("Models Mark Manson"),d:"~45 min",
+w:"Now inward. Manson's thesis: attractiveness is non-neediness — your standards over others' approval. The anti-pickup book. It will occasionally sting, which is the signal it's working.",
+l:"Neediness versus non-neediness, and why trying to impress broadcasts the opposite.",
+m:["Catch yourself seeking validation once. Just log it.","State one honest preference without softening it.","Mention a nerd passion to someone new with zero apology. Interests are a filter, not a flaw."]},
+{a:4,t:"Models — Vulnerability as Strength",s:"Mark Manson (Audible)",u:AU("Models Mark Manson"),d:"~45 min",
+w:"His central move: emotional risk is the mechanism, not a side effect. Every honest expression of interest is a small bet that can be refused — that's what makes it worth anything.",
+l:"Why safe behaviour reads as low investment rather than as politeness.",
+m:["Express one real opinion in a group instead of staying neutral.","Say something true that you'd normally keep to yourself.","Tell someone you enjoy their company, directly."]},
+{a:4,t:"Models — An Attractive Lifestyle",s:"Mark Manson (Audible)",u:AU("Models Mark Manson"),d:"~45 min",
+w:"You don't perform attractiveness, you build a life that generates it. This doubles as strategy: where does a geek meet compatible women? Where his interests are assets, not confessions.",
+l:"Fishing where your fish are; honest self-investment versus performing.",
+m:["List three environments where your interests are an asset with women who share them.","Take one postponed step on appearance or fitness.","Sign up for one recurring activity around a shared interest."]},
+{a:4,t:"Models — Rejection as Filtering",s:"Mark Manson (Audible)",u:AU("Models Mark Manson"),d:"~45 min",
+w:"The chapter this whole path has been building toward. Rejection reframed as a filter working correctly — the girl from school wasn't a verdict on you, she was a non-match being filtered out.",
+l:"Why polarizing beats pleasing, and what rejection actually costs.",
+m:["Write your worst rejection, then what it actually cost you long term. Compare the sizes.","Do one thing with a real chance of no. Log predicted versus actual sting.","Collect one no on purpose this week and journal how survivable it was."]},
+{a:4,t:"Models — Handling Anxiety",s:"Mark Manson (Audible)",u:AU("Models Mark Manson"),d:"~45 min",
+w:"The practical anti-anxiety chapters: acting before you feel ready, tolerating the discomfort of the first ten seconds, and refusing to outsource your mood to someone else's response.",
+l:"Why waiting to feel confident is the wrong order of operations.",
+m:["Do one small social thing within ten seconds of thinking of it.","Approach someone before your brain finishes its objection.","Do something socially uncomfortable and stay in it rather than escaping early."]},
+{a:4,t:"Befriending Your Inner Voice",s:"Hidden Brain — Ethan Kross (podcast)",u:SP("Hidden Brain Befriending Your Inner Voice Ethan Kross"),d:"~50 min",
+w:"Emotion regulation is a measured pillar of romantic competence, and this is its toolkit: the 2am replay loop, the pre-conversation dread, and the researched techniques that actually shrink them.",
+l:"Distanced self-talk using your own name, and temporal distancing.",
+m:["When you replay a social moment, ask out loud how much it will matter in a month.","Before an uncomfortable interaction, coach yourself in third person by name.","After an awkward moment, close the loop in one journal line and stop. No replays."]},
+{a:4,t:"Self-Compassion",s:"Kristin Neff — TEDx (free)",u:"https://www.youtube.com/watch?v=IvtZBUSplr4",d:"19 min",
+w:"Neff's research: self-compassion beats self-esteem, because it doesn't require feeling superior and it survives failure. For a man whose inner critic writes in capitals, this is the highest-value nineteen minutes here.",
+l:"The three components: kindness, common humanity, mindfulness.",
+m:["After a stumble, ask what you'd tell a friend who did it — then say that to yourself.","Write your three harshest self-criticisms, then rewrite them as you'd say them to your recruit.","Share one insecurity with someone you trust, without the self-mocking joke."]},
+{a:4,t:"Finally Learn to Say No",s:"Art of Manliness #915 (podcast)",u:SP("Art of Manliness Finally Learn to Say No"),d:"~45 min",
+w:"Assertiveness is one of five measured courtship skills. People-pleasing reads as low value and breeds quiet resentment; a clean refusal reads as self-respect.",
+l:"The empowered refusal — phrasing a no so it creates less pushback.",
+m:["Say one clean no without a three-part apology attached.","Decline something you'd normally accept out of obligation.","Say no to someone whose approval you want."]},
+{a:4,t:"Assertive Communication",s:"Psychologists Off the Clock #276 — Randy Paterson (podcast)",u:SP("Psychologists Off the Clock Assertive Communication Randy Paterson"),d:"~50 min",
+w:"Paterson wrote The Assertiveness Workbook. He separates assertive from aggressive, and names when assertiveness isn't the right move — nuance that stops this becoming an excuse to be blunt.",
+l:"His stage metaphor for aggressive, passive and assertive.",
+m:["State a boundary you've been swallowing.","Make a direct request without hedging or over-explaining.","Renegotiate an ongoing arrangement that hasn't been working for you."]},
+{a:4,cp:1,t:"Checkpoint V — The Knight",s:"Self-measurement",d:"10 min",
+w:"Fifth data point, and usually where confidence moves — because this is where your relationship with rejection changed.",
+l:"Rate, then reread your Arc 1 entries and meet the man who wrote them."},
+// ARC 6
+{a:5,t:"The Power of Vulnerability",s:"Brené Brown — TED",u:"https://www.ted.com/talks/brene_brown_the_power_of_vulnerability",d:"20 min",
+w:"Twenty minutes, decades of data: connection requires being seen, and being seen requires vulnerability. Brown is a quantitative researcher who hit this result and hated it — which is why a skeptic should hear it from her.",
+l:"The single differentiator of wholehearted people.",
+m:["Answer 'how are you' honestly once, one level below fine.","Share a real feeling with someone safe.","Tell someone about this journey you're on. Watch it land better than you predicted."]},
+{a:5,t:"Models — Honest Communication",s:"Mark Manson (Audible)",u:AU("Models Mark Manson"),d:"~45 min",
+w:"Manson operationalizes Brown: flirting is honest interest expressed playfully. Eye contact, humor and touch are channels for truth rather than tricks — which is the whole difference from pickup.",
+l:"Graduated self-disclosure, and expressing interest without demanding reciprocation.",
+m:["Hold eye contact through full sentences in one conversation.","Share something slightly personal, read the response, match their level.","Express appreciation of a person to their face, directly, no hedging."]},
+{a:5,t:"Models — Polarizing Honestly",s:"Mark Manson (Audible)",u:AU("Models Mark Manson"),d:"~45 min",
+w:"Being universally acceptable makes you no one's favourite. Finishing Models means accepting that the goal is to be strongly right for some people, not mildly tolerable to everyone.",
+l:"Why filtering out mismatches early is a kindness to both of you.",
+m:["Say one opinion that not everyone in the room shares.","Let a disagreement stand without smoothing it over.","Be openly, specifically yourself with someone you want to impress."]},
+{a:5,t:"Emotional Courage",s:"Susan David — TED",u:"https://www.ted.com/talks/susan_david_the_gift_and_power_of_emotional_courage",d:"17 min",
+w:"Giving emotional support is one of the five measured courtship skills, and the one partners rate most. David's finding: rigid positivity breaks connection; presence builds it.",
+l:"Emotions as data rather than directives, and why 'at least' backfires.",
+m:["When someone vents, offer no advice and no 'at least'. Just ask for more.","Name someone's emotion out loud and let them correct you.","Be the listener for someone's genuinely bad day, start to finish, no fixing."]},
+{a:5,cp:1,t:"Checkpoint VI — The Open Visor",s:"Self-measurement",d:"10 min",
+w:"Foundation complete. Everything from here builds the room, then aims at love directly.",
+l:"Journal: what can you say out loud now that you couldn't at Step 1?"},
+// ARC 7
+{a:6,t:"How Many Hours It Takes",s:"Jeffrey Hall — friendship research (article)",u:"https://news.ku.edu/news/article/2018/03/06/study-reveals-number-hours-it-takes-make-friend",d:"12 min read",
+w:"Hall's numbers: roughly 50 hours together to become casual friends, 90 to become friends, 200+ to become close. Crucially it's leisure hours — work hours barely count, and texting counts least of all.",
+l:"Why proximity alone never converts, and what kind of time does.",
+m:["Calculate the hours you've actually spent with someone you'd like closer.","Schedule recurring time with one person rather than waiting for it to happen.","Turn one work-only relationship into a leisure one — invite them to something."]},
+{a:6,t:"The Art of Gathering",s:"Unlocking Us — Brené Brown with Priya Parker (podcast)",u:SP("Unlocking Us Brene Brown Priya Parker Art of Gathering"),d:"~1h",
+w:"Parker's thesis: gatherings fail because nobody names the purpose. Of the hundred-plus gatherers she interviewed, many were introverts and outsiders — one said, I create the gatherings I wish existed.",
+l:"Purpose before logistics, and why the guest list is a decision not a courtesy.",
+m:["Name the purpose of something you already attend regularly.","Suggest one specific plan to a group instead of waiting for someone else to.","Invite two or more people to something you design yourself."]},
+{a:6,t:"Hosting With Intention",s:"Good Life Project — Priya Parker (podcast)",u:SP("Good Life Project Priya Parker Art of Gathering"),d:"~50 min",
+w:"The host's job is protecting guests and equalizing the room. This is the DM's chair described by a researcher — and the reason running the table beats attending it.",
+l:"Generous authority, and why hands-off hosting abandons people.",
+m:["Introduce two people to each other and give them a reason to talk.","Take charge of one small group decision instead of deferring.","Host something. Four people, one purpose, a clear start and end."]},
+{a:6,t:"Finding Your Room",s:"Applied step — your own city",u:SP("Priya Parker Together Apart community building"),d:"~30 min",
+w:"The one step with no external content, because the work is local. You've said the missing piece is a recurring space. This is where you find or start it.",
+l:"Look for weekly, interest-based, and small enough that absence is noticed.",
+m:["Find three recurring groups near you — gaming, D&D, board games, a course.","Contact one and ask about joining.","Show up to one, in person, once."]},
+{a:6,cp:1,t:"Checkpoint VII — Belonging",s:"Self-measurement",d:"10 min",
+w:"Seventh data point. Skills now have somewhere to live.",
+l:"Rate, and name the room you're building."},
+// ARC 8
+{a:7,t:"Alone Is Not Lonely",s:"Bella DePaulo — single life research (podcast)",u:SP("Bella DePaulo single at heart science of single living"),d:"~50 min",
+w:"DePaulo is the leading researcher on single life, and her data kills the assumption underneath your fear: single people aren't isolated, they're often more socially connected. Note her focus is people who choose permanent single life — take the myth-busting, not the destination.",
+l:"Why the stereotype persists, and what the data actually shows.",
+m:["Write which of your fears about being single are assumptions rather than evidence.","Do something alone in public you'd normally avoid doing alone.","Enjoy a solo evening deliberately and journal whether it was as bleak as predicted."]},
+{a:7,t:"The Science of Solitude",s:"Weinstein, Nguyen & Hansen — solitude research (talk/article)",u:SP("science of solitude Netta Weinstein Thuy-vy Nguyen research"),d:"~35 min",
+w:"Their research identifies autonomy and authenticity as solitude's core powers: alone is where you're least performed. That capacity is what stops a relationship search becoming desperate.",
+l:"Chosen solitude versus imposed isolation — different states entirely.",
+m:["Take twenty minutes alone with no screen and notice what happens.","Do one thing purely because you want to, not to become more attractive.","Plan something for yourself that has nothing to do with dating."]},
+{a:7,t:"Building a Life You'd Choose",s:"Solo — Peter McGraw (podcast)",u:SP("Solo podcast Peter McGraw single living"),d:"~45 min",
+w:"McGraw — the humor researcher from Arc 3 — treats single life as a design problem rather than a waiting room. The frame that matters: build the good life now, and search from strength.",
+l:"Designing a life rather than defaulting into one.",
+m:["Name three things that would make your life better regardless of dating.","Do one of them this week.","Commit to one of them as a standing part of your life."]},
+{a:7,cp:1,t:"Checkpoint VIII — Grounded",s:"Self-measurement",d:"10 min",
+w:"Eighth data point. From here the path aims at love, and it aims from a stable base.",
+l:"Rate, then write what a good week looks like for you now."},
+// ARC 9
+{a:8,t:"The Science of Love, Desire and Attachment",s:"Huberman Lab Essentials (podcast)",u:SP("Huberman Lab Essentials Science of Love Desire Attachment"),d:"~40 min",
+w:"The mechanics under the hood: why proximity and repetition build attraction, and what chemistry physically is. Use the shorter Essentials cut, and skip the supplement segment — it's the weakest part.",
+l:"Desire and attachment as separate systems; autonomic coordination between partners.",
+m:["Journal which of your 'leagues' beliefs survive contact with the mechanism.","Identify a place you repeatedly see the same people. Show up deliberately.","Talk to the same new person twice in one week."]},
+{a:8,t:"The Five Flirting Styles",s:"Jeffrey Hall — Flirting Styles Inventory (article)",u:"https://news.ku.edu/news/article/2013/09/11/new-book-outlines-five-types-flirting-styles",d:"12 min read",
+w:"The diagnosis step. Hall's five styles came from 5,000 eHarmony users and a later worldwide sample. Polite flirts are respectful, hands-off, and get read as friendly — almost certainly your file, and fixable.",
+l:"Which style is yours, honestly. Sincere is the most common and the most effective.",
+m:["Identify your dominant style and journal three past moments it explains.","Recall a time you liked someone and were polite about it. Write what sincere would have looked like.","Send one deliberately warmer-than-polite signal in a low-stakes interaction."]},
+{a:8,t:"Flirting as Honest Signal",s:"Jeffrey Hall — The Five Flirting Styles (Audible, optional)",u:AU("The Five Flirting Styles Jeffrey Hall"),d:"~45 min",
+w:"The book behind the inventory, if you want depth on your own style. The sincere style — questions, attention, emotional connection — is built from the exact listening skills you spent Arc 2 training.",
+l:"How sincere flirts convert interest into being understood as interest.",
+m:["Ask a woman one question that shows real attention rather than politeness.","Combine attention with a warm signal — sustained eye contact and a real smile.","Make your interest unmistakable to someone you actually find interesting."]},
+{a:8,t:"Reading & Sending Signals",s:"Vanessa Van Edwards (free videos)",u:YT("Vanessa Van Edwards flirting signals attraction cues"),d:"~20 min",
+w:"Signal literacy both directions: what interest looks like incoming, and what yours looks like outgoing. Most missed opportunities are detection failures, not rejection.",
+l:"Clusters rather than single cues; friendly versus interested.",
+m:["Observe one interaction and spot a signal cluster.","In conversation with a woman, read whether it's friendly or warm. Log your read.","Send a clear respectful interest signal — eye contact plus a compliment on something non-physical."]},
+{a:8,cp:1,t:"Checkpoint IX — Signals Online",s:"Self-measurement",d:"10 min",
+w:"Ninth data point. You know your style, the trap, and the exit.",
+l:"Rate, and write your style plus your escape plan in two lines."},
+// ARC 10
+{a:9,t:"A Playbook for Modern Dating",s:"Art of Manliness #778 — Logan Ury (podcast)",u:SP("Art of Manliness Playbook for Modern Dating Logan Ury"),d:"~51 min",
+w:"Ury runs relationship science at Hinge — data from millions of daters. The three dating tendencies, and you'll likely recognize the Hesitater: I'll date when I'm ready. Research-backed, zero sleaze.",
+l:"The three tendencies, and prom date versus life partner criteria.",
+m:["Identify your dating tendency and journal the evidence.","Write your life partner criteria — actual traits, not prom date traits.","Set a concrete date to start actively dating. Hesitaters never feel ready; they decide."]},
+{a:9,t:"Apps, Profiles & Texting",s:"Being Well — Logan Ury (podcast)",u:SP("Being Well Logan Ury How to Not Die Alone"),d:"~55 min",
+w:"Your profile is a filter, not an advertisement. Nerdy specifics select for compatibility rather than repelling people — the exact opposite of the instinct to sand yourself smooth.",
+l:"Prompts that invite conversation, and moving from texting to meeting.",
+m:["Draft or rewrite your profile: specific, honest, unapologetically you.","Put it live and send three openers referencing something specific in her profile.","Move one conversation toward an actual meeting within a few days."]},
+{a:9,t:"The Ask & First-Date Design",s:"Logan Ury — first dates (podcast)",u:SP("Logan Ury first date design dating coach"),d:"~45 min",
+w:"Asking someone out is a two-sentence skill; the dread around it was Arc 5's job and it's done. Date design is the rest: activity over interrogation, side by side over across a table.",
+l:"Date design principles, the second-date default, and ending well.",
+m:["Design your ideal first date on paper: place, activity, length, exit.","Practise the ask out loud until it's boring.","Use it. On a real person. Log predicted versus actual sting."]},
+{a:9,t:"The 36 Questions",s:"Hidden Brain — Arthur Aron (podcast)",u:SP("Hidden Brain Relationships 2.0 Keeping Love Alive Arthur Aron"),d:"50 min",
+w:"Aron built the strongest evidence that closeness is generated rather than found: escalating reciprocal disclosure. Also his finding that about 40% of couples married a decade still report intense love.",
+l:"The 36 questions mechanism, and self-expansion through novelty.",
+m:["Read the 36 questions. Pick five you could actually ask.","Use one closeness-generating question this week — friends count, same mechanism.","Go one disclosure level deeper than small talk with a woman you're interested in."]},
+{a:9,t:"Dating Here, Not There",s:"Local context — Israeli dating (podcast, Hebrew)",u:SP("מדברים זוגיות מעשית"),d:"~45 min",
+w:"Every source so far is Anglo-American. This step exists because the dating market you're actually in is Israeli, army-shaped, and small — where everyone knows everyone and rejection feels more public.",
+l:"Pick an episode on dating, apps, or singlehood. Take what fits, discard what doesn't.",
+m:["Journal which advice from this path needs adapting to your actual environment.","Name three places locally where you'd meet people around a shared interest.","Act on one of them."]},
+{a:9,cp:1,t:"Checkpoint X — The Suitor",s:"Self-measurement",d:"10 min",
+w:"Tenth data point. Courtship mechanics complete.",
+l:"Rate. If you've made a real ask by now, reread Step 1 and enjoy the distance."},
+// ARC 11 — Attached x10 + CP
+{a:10,t:"Attached — The Attachment Revolution",s:"Levine & Heller (Audible, book 4 of 4)",u:AU("Attached Amir Levine Rachel Heller"),d:"~45 min",
+w:"The single most useful framework in relationship science. Attachment isn't a personality quiz — it's a prediction engine for how you'll behave when closeness or distance shows up.",
+l:"Where attachment theory came from and why adult romance runs on it.",
+m:["Journal how you typically react when someone pulls away.","Ask someone who knows you well how you behave when you're close to someone.","Map your last three attractions and look for the pattern."]},
+{a:10,t:"Attached — Your Style",s:"Levine & Heller (Audible)",u:AU("Attached Amir Levine Rachel Heller"),d:"~45 min",
+w:"The diagnosis, with the book's own questionnaire. Anxious, avoidant, secure — most people recognize themselves immediately, and the recognition is uncomfortable in a useful way.",
+l:"The three styles and the questionnaire.",
+m:["Take the quiz. Journal your style and whether it surprised you.","Map your style onto your history, including the situation from school.","Tell someone you trust your result and ask what they observe."]},
+{a:10,t:"Attached — The Dependency Paradox",s:"Levine & Heller (Audible)",u:AU("Attached Amir Levine Rachel Heller"),d:"~45 min",
+w:"The counterintuitive core: having someone reliable to depend on makes people more independent, not less. Needing closeness isn't weakness, it's the architecture.",
+l:"Why the secure base makes bolder people.",
+m:["Notice once when you hid a need to seem low-maintenance.","Ask for something small you'd normally not ask for.","Tell someone directly what you need from them."]},
+{a:10,t:"Attached — The Anxious Style",s:"Levine & Heller (Audible)",u:AU("Attached Amir Levine Rachel Heller"),d:"~45 min",
+w:"Protest behaviour, hypervigilance to signals, the ruminating after a slow reply. If this is your file, naming it removes most of its power — the behaviour is predictable once seen.",
+l:"Protest behaviours, and activating strategies.",
+m:["Notice one activating moment — a slow reply, a changed tone. Name it.","Do not act on one urge to chase. Log what happened instead.","Say plainly what you need rather than testing whether they'll notice."]},
+{a:10,t:"Attached — The Avoidant Style",s:"Levine & Heller (Audible)",u:AU("Attached Amir Levine Rachel Heller"),d:"~45 min",
+w:"Deactivating strategies: focusing on flaws, pulling back when things go well, keeping an exit visible. Worth knowing even if it isn't you, because you'll date it.",
+l:"Deactivating strategies and the phantom ex.",
+m:["Notice if you ever create distance when things go well.","Recall someone who pulled away when you got close. Reread it through this lens.","Name one deactivating behaviour of your own and choose the counter-move."]},
+{a:10,t:"Attached — Secure Behaviour",s:"Levine & Heller (Audible)",u:AU("Attached Amir Levine Rachel Heller"),d:"~45 min",
+w:"Secure isn't a lottery ticket, it's a set of behaviours: direct communication, comfort with closeness, no games. It can be learned, and dating a secure person moves you toward it.",
+l:"What secure people actually do differently, moment to moment.",
+m:["Copy one secure behaviour today — respond directly instead of strategically.","Handle one small conflict without withdrawing or escalating.","Be the secure one in an interaction where someone else is anxious."]},
+{a:10,t:"Attached — Reading Others Early",s:"Levine & Heller (Audible)",u:AU("Attached Amir Levine Rachel Heller"),d:"~45 min",
+w:"Partner choice is the decision that determines most of what follows. The book's rules for detecting someone's style early are the highest-return pages in it.",
+l:"The golden rules, and the early tells.",
+m:["Type one past crush retroactively. What were the tells?","Write your green flags — secure behaviours to look for.","Form a hypothesis about someone's style from observable behaviour this week."]},
+{a:10,t:"Attached — The Anxious-Avoidant Trap",s:"Levine & Heller (Audible)",u:AU("Attached Amir Levine Rachel Heller"),d:"~45 min",
+w:"The loop that generates most relationship misery: one chases, one retreats, both suffer, and the intensity gets mistaken for chemistry. Knowing it in advance is how you decline the invitation.",
+l:"Why the trap feels like passion from the inside.",
+m:["Journal whether you've been in this loop before.","Identify your own trap-entry behaviour — chasing or retreating.","Write your countermove for the next time it triggers."]},
+{a:10,t:"Attached — Effective Communication",s:"Levine & Heller (Audible)",u:AU("Attached Amir Levine Rachel Heller"),d:"~45 min",
+w:"The practical core: stating needs without blame. 'I feel disconnected when' instead of 'you never'. It sounds like a formula because it is one, which is why it works under stress.",
+l:"How effective communication also functions as an early compatibility test.",
+m:["Write one need as blame, then rewrite it as I-feel-when.","Use one effective-communication statement for real — family and friends count.","Raise something difficult with someone using it."]},
+{a:10,t:"Attached — Styles Can Change",s:"Levine & Heller (Audible)",u:AU("Attached Amir Levine Rachel Heller"),d:"~45 min",
+w:"Finishing the book on the hopeful finding: attachment style shifts over time, especially with a secure partner and deliberate practice. It's a starting position, not a sentence.",
+l:"What actually moves people toward security.",
+m:["Write your top three takeaways from Attached.","Name one behaviour you'll practise to move toward secure.","Practise it in a real relationship this week."]},
+{a:10,cp:1,t:"Checkpoint XI — The Pattern-Reader",s:"Self-measurement",d:"10 min",
+w:"Eleventh data point. Most people learn this from a decade of painful relationships. You learned it first.",
+l:"Rate. Write your style and your top green flag, one line each."},
+// ARC 12
+{a:11,t:"What Actually Predicts Satisfaction",s:"Joel, Eastwick et al. — 11,196 couples (article)",u:SP("Samantha Joel machine learning relationship satisfaction study"),d:"~25 min",
+w:"84 researchers, 43 datasets, 11,196 couples. Relationship-specific variables explained about 45% of relationship quality; a partner's own traits explained about 5% of their partner's satisfaction. Your checklist is measuring the wrong thing.",
+l:"Perceived partner commitment, appreciation, and lack of conflict as the real predictors.",
+m:["Write your current mental checklist for a partner. Keep it — you'll compare later.","Rewrite it around how you'd feel and behave with someone, not their attributes.","Ask a couple you respect what actually makes it work. Compare to your list."]},
+{a:11,t:"Your Preferences Are Lying",s:"Eastwick & Finkel — ideal preferences research (article)",u:SP("Paul Eastwick ideal partner preferences speed dating research"),d:"~25 min",
+w:"Stated preferences predicted attraction to written profiles — and stopped predicting anything after a live interaction. People reinterpret traits once a person is real. This is why app filtering misleads you.",
+l:"The speed-dating result, and why profiles mislead in a specific direction.",
+m:["Notice one trait you screen for. Ask whether it ever actually predicted anything.","Meet someone in person you'd have filtered out on paper.","Give a real chance to someone who doesn't match your type."]},
+{a:11,t:"Prom Date vs Life Partner",s:"Logan Ury — partner criteria (podcast)",u:SP("Logan Ury prom date life partner criteria"),d:"~40 min",
+w:"Ury's practical version of the same finding: we optimize for the qualities that make a great evening rather than a great decade. Reliability and kindness read as boring right up until they're everything.",
+l:"Which traits people over-weight, and which ones actually carry.",
+m:["List which of your criteria are prom-date criteria.","Write three life-partner traits you've been under-weighting.","Evaluate someone you know by the second list instead of the first."]},
+{a:11,cp:1,t:"Checkpoint XII — Judgment",s:"Self-measurement",d:"10 min",
+w:"Twelfth data point. You now know what to look for, and what to stop looking for.",
+l:"Rate, and compare your rewritten criteria to your original list."},
+// ARC 13
+{a:12,t:"Consent as Communication",s:"Come As You Are — Emily Nagoski (podcast)",u:SP("Come As You Are Emily Nagoski consent episode"),d:"~45 min",
+w:"Nagoski's definition: everyone is glad to be there and free to leave with no unwanted consequences, and no unwanted pain. Framed this way consent isn't a legal disclaimer, it's what makes touch confident instead of guesswork.",
+l:"Enthusiastic yes, the enthusiastic maybe, and check-ins that sound human.",
+m:["Journal your honest fears about physical escalation. Naming shrinks them.","Notice how you already read consent in ordinary touch — handshakes, a hand on a shoulder.","Write your own three rules for keeping touch gradual, readable and reversible."]},
+{a:12,t:"The Dual Control Model",s:"Come As You Are — Emily Nagoski (podcast)",u:SP("Come As You Are Emily Nagoski dual control model"),d:"~45 min",
+w:"Nagoski is the leading researcher here. Desire runs on an accelerator and brakes, and for most people stress is the biggest brake. This single model corrects most of what pornography taught your generation.",
+l:"Accelerator and brakes, and why context does more work than technique.",
+m:["Journal which beliefs about sex you absorbed from unreliable sources.","Learn the dual control model well enough to explain it in three sentences. Write them.","Discuss one insight with someone you trust. Talking about this like an adult is the skill."]},
+{a:12,t:"Responsive Desire",s:"Come As You Are — Emily Nagoski (podcast)",u:SP("Come As You Are Emily Nagoski responsive desire"),d:"~45 min",
+w:"Spontaneous desire is the movie version; responsive desire — arousal first, wanting second — is more common, especially in women. Not knowing this makes men misread a partner badly and personally.",
+l:"Why arousal and desire aren't the same thing, and what context does.",
+m:["Write what you assumed about how desire works, and what you now know.","Notice how often media shows only spontaneous desire.","Explain responsive desire to someone. Teaching it proves you understand it."]},
+{a:12,t:"Escalation, Slowly",s:"Applied step — your own principles",s2:1,u:SP("Emily Nagoski pleasure is the measure context"),d:"~30 min",
+w:"No new source: this step turns the arc into rules you'll actually follow. Gradual, readable, reversible — each step a question the other person can answer easily either way.",
+l:"Write rules you'd be comfortable having read aloud.",
+m:["Write your three escalation principles.","Add what you'll do when you're unsure — the specific words.","Share them with someone you trust and let them push back."]},
+{a:12,cp:1,t:"Checkpoint XIII — Grounded in Body",s:"Self-measurement",d:"10 min",
+w:"Thirteenth data point. The most myth-infested domain, replaced with research.",
+l:"Rate honestly, including your comfort with the subject itself."},
+// ARC 14
+{a:13,t:"Healthy and Unhealthy Signs",s:"Relationship health frameworks (article)",u:SP("healthy relationship signs unhealthy signs framework"),d:"~20 min",
+w:"The checklist worth memorizing. Healthy: comfortable pace, trust, honesty, independence, respect, equality, kindness, taking responsibility, healthy conflict, fun. Unhealthy: intensity, isolation, manipulation, guilting, belittling, volatility, possessiveness.",
+l:"Intensity is on the unhealthy list. It's the one people mistake for love.",
+m:["Score a past relationship or a friendship against both lists.","Write which unhealthy signs you'd be most likely to excuse.","Discuss the lists with someone who knows you."]},
+{a:13,t:"Contempt and the Loss of Self",s:"Gottman research — red flags (article/podcast)",u:SP("Gottman contempt strongest predictor divorce"),d:"~30 min",
+w:"Two reliable alarms. Contempt — mockery, eye-rolling, sarcasm aimed at you — is among the strongest predictors of divorce. And gradual loss of self: sacrificing hobbies, goals and people to keep the peace.",
+l:"Why most relationships survive conflict but few survive chronic disrespect.",
+m:["Name what you would not give up for anyone.","Notice contempt in any relationship around you, including on screen.","Ask someone close whether they've seen you shrink for anyone."]},
+{a:13,t:"Leaving Well",s:"Ending relationships — research overview (article)",u:SP("how to end a relationship kindly psychology"),d:"~25 min",
+w:"Ending things is a skill with a right way: clearly, in person, without a slow fade. Ghosting is common and corrosive, and knowing you can end something kindly makes starting things less frightening.",
+l:"The stages of ending, and why ambiguity hurts more than the answer.",
+m:["Write what you'd want said to you if someone ended it.","Write the script you'd use to end something kindly.","End or clarify something ambiguous you've been letting drift."]},
+{a:13,t:"If It Ends",s:"Breakup resilience (podcast)",u:SP("Hidden Brain breakups recovery relationships ending"),d:"~50 min",
+w:"Deliberately near the end: the hidden fear behind hesitation isn't rejection, it's that it might end badly. It might. You'd survive it, and knowing the recovery mechanics removes the last excuse.",
+l:"What actually speeds recovery, and the mistakes that slow it.",
+m:["Journal how much of your hesitation is fear of the ending rather than the beginning.","Write your own if-it-ends protocol — three things you'd do in the first month.","Make the written case that trying is worth it even with breakup risk priced in."]},
+{a:13,cp:1,t:"Checkpoint XIV — Discernment",s:"Self-measurement",d:"10 min",
+w:"Fourteenth data point. You can now tell a rough patch from a warning, and you know the exit exists.",
+l:"Rate, and write your non-negotiables."},
+// ARC 15
+{a:14,t:"The Four Horsemen",s:"The Gottman Institute (free article + PDF)",u:"https://www.gottman.com/blog/the-four-horsemen-the-antidotes/",d:"~25 min",
+w:"Gottman's lab predicts divorce from minutes of conversation using four behaviours: criticism, contempt, defensiveness, stonewalling. Each has an antidote. Learn the failure modes before you deploy.",
+l:"The four, their antidotes, and why contempt is the worst of them.",
+m:["Spot one horseman in the wild this week.","Catch yourself using one — defensiveness is the usual suspect — and use the antidote.","Use a soft startup in a real disagreement: complaint without blame, one specific request."]},
+{a:14,t:"What Makes Love Last",s:"Unlocking Us — Brené Brown with the Gottmans (podcast)",u:SP("Unlocking Us Brene Brown Gottman what makes love last"),d:"1h 24m",
+w:"Forty years of research and forty books, in conversation. This is where the horsemen stop being a list and become recognizable in real speech — including in your own.",
+l:"Bids for connection, turning toward, and repair attempts mid-conflict.",
+m:["Spot three bids aimed at you today and turn toward each one.","Build a mini love-map of someone close: current worry, joy, dream. Verify one by asking.","Attempt an explicit repair next time tension rises with anyone."]},
+{a:14,t:"The Love Prescription, Part 1",s:"Unlocking Us — the Gottmans (podcast)",u:SP("Unlocking Us Love Prescription Gottman part 1"),d:"54 min",
+w:"Their seven-day protocol, built from the same decades of data. Direct, honest and actionable — and practicable now, on family and friends, long before you need it romantically.",
+l:"The small daily moves that compound, and the ratio that predicts survival.",
+m:["Do one day of the protocol on any relationship you have.","Do three days.","Run the full seven days with someone who matters to you."]},
+{a:14,t:"The Love Prescription, Part 2",s:"Unlocking Us — the Gottmans (podcast)",u:SP("Unlocking Us Love Prescription Gottman part 2"),d:"~50 min",
+w:"The back half of the protocol: appreciation out loud, gentle conflict, and the maintenance work that unglamorously keeps love alive after the novelty burns off.",
+l:"Why appreciation must be spoken, not merely felt.",
+m:["Say one appreciation out loud that you've only ever thought.","Do it daily for a week with the same person.","Tell someone what they mean to you, specifically, in full."]},
+{a:14,t:"The Good Life",s:"Robert Waldinger — TED",u:"https://www.ted.com/talks/robert_waldinger_what_makes_a_good_life_lessons_from_the_longest_study_on_happiness",d:"13 min",
+w:"The closing argument. 724 men, 85 years, the longest study of adult life ever run, and one headline finding: good relationships keep us happier and healthier, and loneliness kills. This was never only a dating project.",
+l:"Quality over quantity, and social fitness as ongoing practice.",
+m:["Name your people. That list is the actual wealth.","Do one deliberate act of maintenance on an existing relationship.","Make one standing commitment that keeps social fitness permanent — the weekly table, the monthly call."]},
+{a:14,cp:1,t:"Checkpoint XV — The Road Goes Ever On",s:"Final measurement",d:"15 min",
+w:"Final data point. Compare everything to baseline, then read your first journal entry. The program ends here; the practice is just your life now, with better instruments and a finished map.",
+l:"Rate one last time, and write a letter to the next man who starts this path."}
+];
+
+const TIERS=[{k:0,n:"Scout",i:"🥾",xp:30,h:"comfortable"},{k:1,n:"Knight",i:"⚔️",xp:50,h:"a stretch"},{k:2,n:"Dragon",i:"🐉",xp:80,h:"brave"}];
+const XPC=30,XPJ=20,XPK=40,XPP=10;
+const LV=[[0,"Villager","🏠"],[250,"Apprentice","📜"],[600,"Scout","🗺️"],[1100,"Journeyman","🗡️"],[1750,"Knight","🛡️"],[2600,"Champion","⚔️"],[3600,"Sage","📖"],[4800,"Archmage","🔮"],[6200,"Hero","🌟"],[7800,"Legend","👑"]];
+const KEY='sq-v6';
+const blank=()=>({v:6,xp:0,days:0,last:null,done:[],miss:{},jr:{},pred:[],cps:[],sk:{},un:0,key:'',tab:'quest',view:0});
+let D=blank(),VIEW=0,TAB='quest',jrTmp='',pP=0,pA=0,cpv={a:5,b:5,c:5},AIO={},busy=null;
+
+function load(){try{const r=localStorage.getItem(KEY);if(r){const p=JSON.parse(r);D=Object.assign(blank(),p);}}catch(e){}VIEW=D.un;}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(D));}catch(e){toast('⚠️ Save failed — storage may be full');}}
+function lvl(x){let c=LV[0];for(const l of LV){if(x>=l[0])c=l;else break;}return c;}
+function nxt(x){for(const l of LV){if(x<l[0])return l;}return null;}
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3200);}
+function touch(){const t=new Date().toISOString().slice(0,10);if(D.last!==t){D.days++;D.last=t;}}
+function gain(n){const o=lvl(D.xp);D.xp+=n;const w=lvl(D.xp);if(w[0]>o[0])setTimeout(()=>levelUp(o,w),300);}
+function levelUp(o,w){const d=document.createElement('div');d.className='ovl';d.innerHTML=`<div class="lv"><div style="font-size:52px">${w[2]}</div><h2>LEVEL UP</h2><div style="color:var(--dim)">${o[2]} ${o[1]}</div><div style="color:var(--gold);margin:4px 0">↓</div><div style="font-size:19px;font-weight:700">${w[2]} ${w[1]}</div><div style="font-size:11px;color:var(--mut);margin-top:12px">tap to continue</div></div>`;d.onclick=()=>d.remove();document.body.appendChild(d);}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function doContent(i){if(D.done.includes(i))return;touch();D.done.push(i);gain(XPC);if(i+1>D.un&&i+1<S.length)D.un=i+1;save();toast('+'+XPC+' XP — next step unlocked 🔓');render();}
+function doMission(i,k){if(D.miss[i]!==undefined)return;touch();D.miss[i]=k;const a=S[i].a;D.sk[a]=(D.sk[a]||0)+(k+1);let b=0;if(pP>0&&pA>0){D.pred.push({s:i,p:pP,a:pA});b=XPP;pP=0;pA=0;}gain(TIERS[k].xp+b);save();toast('+'+(TIERS[k].xp+b)+' XP — '+TIERS[k].i+' '+TIERS[k].n+(b?' (+10 data)':''));render();}
+function doJournal(i){const v=document.getElementById('jr').value.trim();if(!v)return;touch();const isNew=!D.jr[i];D.jr[i]=v;if(isNew)gain(XPJ);save();toast(isNew?'+20 XP — logged 📝':'Entry updated');render();}
+function doCP(i){if(D.cps.some(c=>c.s===i))return;touch();D.cps.push({s:i,a:cpv.a,b:cpv.b,c:cpv.c,d:Date.now()});gain(XPK);if(i+1>D.un&&i+1<S.length)D.un=i+1;save();toast('+'+XPK+' XP — checkpoint recorded 📊');render();}
+
+async function gem(prompt,slot){
+ if(!D.key){toast('Add a Gemini key in Settings first');return;}
+ busy=slot;render();
+ try{
+  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(D.key),
+   {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
+  const j=await r.json();
+  AIO[slot]=j?.candidates?.[0]?.content?.parts?.[0]?.text||('⚠️ '+(j?.error?.message||'No response'));
+ }catch(e){AIO[slot]='⚠️ Could not reach the coach. Check connection or key.';}
+ busy=null;render();
+}
+function debrief(i){
+ const e=D.jr[i];if(!e){toast('Write a debrief first — the coach reads it');return;}
+ const k=D.miss[i];const m=k!==undefined?S[i].m[k]:'(mission not yet done)';
+ gem(`You are a warm, direct social-skills coach inside a self-development app. The user is a young analytical software engineer in the Israeli army, a proud geek, rebuilding social and romantic confidence from first principles. Step: "${S[i].t}" (${S[i].s}). Mission he did: "${m}". His debrief: "${e}". In under 120 words of plain prose, no headers or lists: name one specific thing he did well quoting his own words; give one small concrete thing to try next; add one encouraging observation grounded in social psychology (liking gap, responsiveness, exposure, attachment). Never invent details he didn't write. If his entry is in Hebrew, reply in Hebrew.`,'d'+i);
+}
+function arcInsight(a){
+ const es=S.map((s,i)=>[s,i]).filter(([s,i])=>s.a===a&&D.jr[i]).map(([s,i])=>`${s.t}: ${D.jr[i]}`);
+ if(!es.length){toast('No journal entries in this arc yet');return;}
+ gem(`You are a reflective coach reading a training journal. Arc: "${ARCS[a].n}". Entries:\n${es.join('\n---\n')}\n\nIn under 160 words of plain prose: surface one or two genuine patterns across the entries (growth, a recurring fear, a blind spot), quoting his words briefly; then one specific suggestion for the next arc. Honest and warm, never flattering for its own sake. Never invent events. If the entries are in Hebrew, reply in Hebrew.`,'a'+a);
+}
+
+function exportData(){
+ const s=btoa(unescape(encodeURIComponent(JSON.stringify(D))));
+ const t=document.createElement('textarea');t.value=s;document.body.appendChild(t);t.select();
+ try{document.execCommand('copy');toast('Backup copied to clipboard');}catch(e){prompt('Copy this backup:',s);}
+ t.remove();
+}
+function importData(){
+ const s=prompt('Paste your backup string:');if(!s)return;
+ try{const o=JSON.parse(decodeURIComponent(escape(atob(s.trim()))));if(!o||typeof o.xp!=='number')throw 0;D=Object.assign(blank(),o);VIEW=D.un;save();toast('Progress restored');render();}
+ catch(e){toast('⚠️ That backup could not be read');}
+}
+
+function header(){
+ const L=lvl(D.xp),N=nxt(D.xp),p=N?((D.xp-L[0])/(N[0]-L[0]))*100:100;
+ const tabs=[['quest','🎯','Step'],['path','🗺️','Path'],['miss','⚔️','Missions'],['jr','📝','Journal'],['stats','📊','Stats'],['set','⚙️','Setup']];
+ return `<div class="hrow"><div><h1>⚔️ Social Quest</h1><div class="sub">15 arcs · ${S.length} steps · your pace, no penalties</div></div>
+ <div class="pill"><span>days active</span><b>${D.days}</b></div></div>
+ <div class="xprow"><span>${L[2]} ${L[1]}</span><span style="color:var(--gold)">${D.xp}${N?' / '+N[0]:''} XP</span></div>
+ <div class="bar"><i style="width:${p}%;background:linear-gradient(90deg,#8a6b10,var(--gold))"></i></div>
+ <nav>${tabs.map(t=>`<button class="${TAB===t[0]?'on':''}" onclick="TAB='${t[0]}';render()"><span style="font-size:15px">${t[1]}</span><span>${t[2]}</span></button>`).join('')}</nav>`;
+}
+
+function questView(){
+ const i=Math.min(VIEW,S.length-1),s=S[i],A=ARCS[s.a];
+ const cpDone=s.cp&&D.cps.some(c=>c.s===i);
+ const cDone=D.done.includes(i);
+ let h=`<div class="card" style="border-left:3px solid ${A.c}"><div style="display:flex;gap:10px;align-items:center">
+  <span style="font-size:26px">${A.ic}</span><div><div style="font:600 15px Georgia,serif;color:${A.c}">Arc ${s.a+1} · ${A.n}</div>
+  <div style="font-size:11px;color:var(--dim);font-style:italic">"${A.tag}"</div></div></div></div>`;
+ const pct=Math.round((Object.keys(D.miss).length/S.filter(x=>x.m).length)*100);
+ h+=`<div class="xprow"><span>Missions conquered</span><span>${pct}%</span></div><div class="bar"><i style="width:${pct}%;background:linear-gradient(90deg,var(--grn),#a17bf5)"></i></div>`;
+ h+=`<div class="nav2"><button onclick="VIEW=Math.max(0,VIEW-1);render()" ${i<=0?'disabled':''}>←</button>
+  <div><b style="font:600 16px Georgia,serif">Step ${i+1} / ${S.length}</b>${i===D.un?`<span class="badge" style="background:#e2b34022;color:var(--gold)">CURRENT</span>`:i<D.un?`<span class="badge" style="background:#f0a05a22;color:var(--acc)">REVIEW</span>`:''}</div>
+  <button onclick="VIEW=Math.min(D.un,VIEW+1);render()" ${i>=D.un?'disabled':''}>→</button></div>`;
+ if(i!==D.un)h+=`<button class="jump" onclick="VIEW=D.un;render()">↗ Back to current step (${D.un+1})</button>`;
+
+ h+=`<div class="card"><div style="display:flex;justify-content:space-between"><div class="lbl">${s.cp?'📊 CHECKPOINT':'🌙 TONIGHT'}</div><div style="font-size:11px;color:var(--dim)">${s.d}</div></div>
+ <div class="ttl">${esc(s.t)}</div><div class="src">${esc(s.s)}</div>
+ <div class="why"><b style="color:${A.c}">WHY THIS, WHY NOW</b>${esc(s.w)}</div>
+ <div class="lis">${esc(s.l)}</div>`;
+ if(s.u)h+=`<a class="link" href="${s.u}" target="_blank" rel="noopener">🎧 Open source ↗</a>`;
+ if(!s.cp)h+=`<button class="b ${cDone?'done':''}" ${cDone?'disabled':''} onclick="doContent(${i})">${cDone?'✅ Done — next step unlocked':'Mark complete (+'+XPC+' XP)'}</button>`;
+ if(s.cp&&!cpDone){
+  h+=[['a','Comfort in conversation'],['b','Listening / presence'],['c','Confidence around women']].map(([k,lb])=>
+   `<div style="margin:10px 0"><div style="font-size:12px;color:var(--dim);margin-bottom:4px">${lb}: <b style="color:var(--gold)">${cpv[k]}</b>/10</div>
+   <input type="range" min="1" max="10" value="${cpv[k]}" oninput="cpv.${k}=+this.value;this.previousElementSibling.querySelector('b').textContent=this.value"></div>`).join('');
+  h+=`<button class="b" onclick="doCP(${i})">Record checkpoint (+${XPK} XP)</button>`;
+ }
+ if(s.cp&&cpDone)h+=`<div style="color:var(--grn);font-size:13px;margin-top:6px">✅ Recorded — see Stats for the chart.</div>`;
+ if(s.cp)h+=`<div style="margin-top:10px"><button class="sm" onclick="arcInsight(${s.a})" ${busy==='a'+s.a?'disabled':''}>${busy==='a'+s.a?'🔮 reading…':'🔮 AI arc insight'}</button>${AIO['a'+s.a]?`<div class="ai">${esc(AIO['a'+s.a])}</div>`:''}</div>`;
+ h+=`</div>`;
+
+ if(s.m){
+  const pick=D.miss[i];
+  h+=`<div class="card" style="border-color:#e2b34033"><div class="lbl">☀️ TOMORROW'S MISSION — PICK ONE</div>
+   <div style="font-size:11px;color:var(--dim);margin:4px 0 10px">Any tier completes the step. Rough day? Scout counts fully.</div>`;
+  TIERS.forEach(t=>{
+   const on=pick===t.k;
+   h+=`<div class="tier ${on?'pick':''} ${pick!==undefined&&!on?'dim':''}">
+    <div class="trow"><span>${t.i} ${t.n} <span style="color:var(--mut);font-weight:400">(${t.h})</span></span><span style="color:var(--gold)">+${t.xp} XP</span></div>
+    <p>${esc(s.m[t.k])}</p>
+    ${pick===undefined?`<button class="sm" onclick="doMission(${i},${t.k})">Complete ${t.n}</button>`:on?`<div style="color:var(--grn);font-size:12px">✅ Conquered</div>`:''}</div>`;
+  });
+  if(pick===undefined){
+   h+=`<div style="background:var(--bg);border-radius:8px;padding:10px;margin-top:8px">
+    <div style="font-size:11px;color:var(--dim);margin-bottom:6px">🔬 Optional (+10 XP): predict the discomfort before, log the reality after. Stats charts the gap — the liking gap, measured on you.</div>
+    <div style="display:flex;gap:12px;font-size:12px;color:var(--dim);align-items:center">
+    Predicted <select onchange="pP=+this.value">${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<option value="${n}" ${pP===n?'selected':''}>${n||'—'}</option>`).join('')}</select>
+    Actual <select onchange="pA=+this.value">${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<option value="${n}" ${pA===n?'selected':''}>${n||'—'}</option>`).join('')}</select></div></div>`;
+  }
+  h+=`</div>`;
+ }
+
+ h+=`<div class="card"><div class="lbl">📝 DEBRIEF — STEP ${i+1}</div>
+  <textarea id="jr" rows="4" placeholder="What happened? What did you notice? Hebrew works too.">${esc(D.jr[i]||'')}</textarea>
+  <div style="margin-top:8px"><button class="sm" onclick="doJournal(${i})">Save${D.jr[i]?'':' (+20 XP)'}</button>
+  <button class="sm" onclick="debrief(${i})" ${busy==='d'+i?'disabled':''}>${busy==='d'+i?'🧠 coaching…':'🧠 AI coach debrief'}</button></div>
+  ${AIO['d'+i]?`<div class="ai">${esc(AIO['d'+i])}</div>`:''}</div>`;
+ return h;
+}
+
+function pathView(){
+ let h=`<div class="sec">The Path</div><div class="note" style="margin-bottom:14px">Fifteen arcs, ${S.length} steps, one playthrough. Listening unlocks the road; missions build the skills and never expire. Four Audible books across the whole journey — about one credit a month at natural pace. Everything else is free.</div>`;
+ ARCS.forEach((A,ai)=>{
+  const st=S.map((s,i)=>[s,i]).filter(([s])=>s.a===ai);
+  const dn=st.filter(([s,i])=>s.cp?D.cps.some(c=>c.s===i):D.done.includes(i)).length;
+  h+=`<div class="card"><div class="arc" style="border-color:${A.c}">
+   <h3 style="color:${A.c}">${A.ic} Arc ${ai+1}: ${A.n}</h3>
+   <p>${esc(A.th)}</p><div style="font-size:11px;color:var(--dim)">${dn}/${st.length} complete</div></div>`;
+  st.forEach(([s,i])=>{
+   const lock=i>D.un,done=s.cp?D.cps.some(c=>c.s===i):D.done.includes(i);
+   h+=`<div class="srow ${lock?'lock':''}" ${lock?'':`onclick="VIEW=${i};TAB='quest';render()"`}>
+    <span>${lock?'🔒':done?'✅':'▫️'}</span><span style="flex:1">${i+1}. ${esc(s.t)}</span>
+    ${D.miss[i]!==undefined?`<span>${TIERS[D.miss[i]].i}</span>`:''}</div>`;
+  });
+  h+=`</div>`;
+ });
+ return h;
+}
+
+function missView(){
+ const open=S.map((s,i)=>[s,i]).filter(([s,i])=>s.m&&i<=D.un&&D.miss[i]===undefined);
+ let h=`<div class="sec">Open Missions</div><div class="note" style="margin-bottom:14px">Missions never expire. Listening can run ahead — the field work waits for the right day. ${Object.keys(D.miss).length}/${S.filter(x=>x.m).length} conquered.</div>`;
+ if(!open.length)h+=`<div style="color:var(--grn);text-align:center;padding:30px">⚔️ All open missions conquered. Keep listening to unlock more.</div>`;
+ open.forEach(([s,i])=>{h+=`<div class="card" style="cursor:pointer" onclick="VIEW=${i};TAB='quest';render()">
+  <div style="font-size:12px;font-weight:600;color:${ARCS[s.a].c};margin-bottom:3px">${ARCS[s.a].ic} Step ${i+1} · ${esc(s.t)}</div>
+  <div style="font-size:13px;color:var(--dim);line-height:1.5">🥾 ${esc(s.m[0])}</div></div>`;});
+ return h;
+}
+
+function jrView(){
+ const es=Object.keys(D.jr).map(Number).sort((a,b)=>b-a);
+ let h=`<div class="sec">Adventure Journal</div>`;
+ if(!es.length)return h+`<div style="color:var(--mut);text-align:center;padding:40px">No entries yet. Every mission deserves a debrief.</div>`;
+ es.forEach(i=>{h+=`<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:4px">
+  <span style="font-size:12px;font-weight:600;color:var(--gold)">Step ${i+1}</span>
+  <span style="font-size:11px;color:var(--mut)">${esc(S[i].t)}</span></div>
+  <div style="font-size:14px;line-height:1.6;white-space:pre-wrap">${esc(D.jr[i])}</div></div>`;});
+ return h;
+}
+
+function chart(){
+ const c=D.cps;if(c.length<1)return'<div class="note">Complete Checkpoint I to start the chart.</div>';
+ const W=300,H=120,P=14,n=Math.max(c.length,2);
+ const x=i=>P+(i*(W-2*P))/(n-1),y=v=>H-P-((v-1)*(H-2*P))/9;
+ const ln=(k,col)=>c.length>1?`<polyline points="${c.map((p,i)=>x(i)+','+y(p[k])).join(' ')}" fill="none" stroke="${col}" stroke-width="2"/>`:'';
+ const dots=c.map((p,i)=>`<circle cx="${x(i)}" cy="${y(p.a)}" r="3" fill="#e2b340"/><circle cx="${x(i)}" cy="${y(p.b)}" r="3" fill="#56b88a"/><circle cx="${x(i)}" cy="${y(p.c)}" r="3" fill="#a17bf5"/>`).join('');
+ return `<svg viewBox="0 0 ${W} ${H}" style="width:100%">${[1,5,10].map(v=>`<line x1="${P}" x2="${W-P}" y1="${y(v)}" y2="${y(v)}" stroke="#252337"/>`).join('')}${ln('a','#e2b340')}${ln('b','#56b88a')}${ln('c','#a17bf5')}${dots}</svg>
+ <div style="display:flex;gap:14px;font-size:11px;color:var(--dim);margin-top:6px"><span style="color:#e2b340">■ comfort</span><span style="color:#56b88a">■ listening</span><span style="color:#a17bf5">■ confidence</span></div>`;
+}
+
+function statsView(){
+ const md=Object.keys(D.miss).length,dr=Object.values(D.miss).filter(v=>v===2).length;
+ const beat=D.pred.filter(p=>p.a<p.p).length;
+ const arcDone=a=>S.map((s,i)=>[s,i]).filter(([s])=>s.a===a).every(([s,i])=>s.cp?D.cps.some(c=>c.s===i):D.done.includes(i));
+ const ach=[['👣','First Step',D.done.length>=1],['🥾','Boots On',md>=1],['🐉','Dragonslayer',dr>=1],['🔬','Scientist',D.pred.length>=1],
+  ['💡','Myth Busted',beat>=1],['📚','Chronicler',Object.keys(D.jr).length>=10],['🔥','Ten Missions',md>=10],['⚡','Thirty Missions',md>=30],
+  ['📊','Data-Driven',D.pred.length>=8],['🏔️','Foundation',[0,1,2,3,4,5].every(arcDone)],['🏛️','Rooted',[6,7].every(arcDone)],
+  ['💘','Love Scholar',[8,9,10,11].every(arcDone)],['👑','Quest Complete',ARCS.every((_,i)=>arcDone(i))]];
+ let h=`<div class="sec">Quest Statistics</div><div class="grid">
+  ${[['📅',D.days,'Days Active'],['🎧',D.done.length,'Steps Heard'],['⚔️',md,'Missions'],['🐉',dr,'Dragon Tier'],['📝',Object.keys(D.jr).length,'Entries'],['✨',D.xp,'Total XP']]
+   .map(s=>`<div class="stat"><div style="font-size:18px">${s[0]}</div><b>${s[1]}</b><span>${s[2]}</span></div>`).join('')}</div>`;
+ h+=`<div class="sec">Skills</div>`;
+ const mx=Math.max(6,...Object.values(D.sk));
+ ARCS.forEach((A,i)=>{const p=D.sk[i]||0;h+=`<div style="display:flex;gap:10px;align-items:center;margin-bottom:9px">
+  <span style="font-size:19px">${A.ic}</span><div style="flex:1"><div style="font-size:13px">${A.sk} <span style="color:var(--gold);font-size:12px">Lv.${p}</span></div>
+  <div class="bar"><i style="width:${(p/mx)*100}%;background:${A.c}"></i></div></div></div>`;});
+ h+=`<div class="sec" style="margin-top:18px">Progress Chart</div><div class="card">${chart()}</div>`;
+ h+=`<div class="sec">The Liking Gap — Measured</div>`;
+ if(!D.pred.length)h+=`<div class="note" style="margin-bottom:14px">Log predicted vs actual on missions to build this dataset.</div>`;
+ else{const ap=(D.pred.reduce((t,p)=>t+p.p,0)/D.pred.length).toFixed(1),aa=(D.pred.reduce((t,p)=>t+p.a,0)/D.pred.length).toFixed(1);
+  h+=`<div class="card"><div style="font-size:13px;margin-bottom:8px">Avg predicted <b style="color:var(--acc)">${ap}</b> · avg reality <b style="color:var(--grn)">${aa}</b></div>
+  ${D.pred.slice(-8).map(p=>`<div style="font-size:12px;color:var(--dim);padding:3px 0">Step ${p.s+1}: predicted ${p.p} → actual ${p.a} ${p.a<p.p?'📉 fear overestimated':p.a>p.p?'📈':'＝'}</div>`).join('')}</div>`;}
+ h+=`<div class="sec">Achievements</div><div style="margin-bottom:18px">${ach.map(a=>`<span class="ach ${a[2]?'':'off'}">${a[0]} ${a[1]}</span>`).join('')}</div>`;
+ return h;
+}
+
+function setView(){
+ return `<div class="sec">Setup</div>
+ <div class="card"><div class="lbl">🧠 AI COACH</div>
+ <p class="note" style="margin:8px 0">The debrief coach and arc insights run on Google's Gemini. Paste a key from Google AI Studio (free to create). Your key is stored only on this device and never leaves it except to call Google directly.</p>
+ <p class="note" style="margin:0 0 10px"><b style="color:var(--acc)">Privacy note:</b> on Google's free tier, content may be used to improve their products. Your journal is personal — if you have Cloud credits from an AI Pro subscription, billing the key against those puts you on the paid tier, where content is not used for training.</p>
+ <input id="gk" type="password" placeholder="Gemini API key" value="${esc(D.key||'')}">
+ <div style="margin-top:8px"><button class="sm" onclick="D.key=document.getElementById('gk').value.trim();save();toast(D.key?'Key saved':'Key cleared');render()">Save key</button></div></div>
+ <div class="card"><div class="lbl">💾 BACKUP</div>
+ <p class="note" style="margin:8px 0">Progress saves automatically on this device. iOS can clear storage when the phone is critically low on space, so export occasionally and keep the text somewhere safe.</p>
+ <button class="sm" onclick="exportData()">Export backup</button><button class="sm" onclick="importData()">Import backup</button></div>
+ <div class="card warn"><div class="lbl" style="color:var(--red)">PHILOSOPHY</div>
+ <p class="note" style="margin:8px 0">No streaks. No penalties. No guilt. The path waits — a week, a month, a deployment. Days active only counts up. Missions never expire. Listening can run ahead of the field work. The only direction here is forward.</p>
+ <p class="note" style="margin:0 0 10px">This app is a training tool, not a substitute for people. If the loneliness ever gets heavy, talking to someone you trust beats any curriculum.</p>
+ <button class="sm" style="color:var(--red);border-color:#eb6f9244" onclick="if(confirm('Reset ALL progress? This cannot be undone.')){D=blank();VIEW=0;save();render();}">Reset all progress</button></div>`;
+}
+
+function render(){
+ document.getElementById('hd').innerHTML=header();
+ const v={quest:questView,path:pathView,miss:missView,jr:jrView,stats:statsView,set:setView}[TAB];
+ document.getElementById('mn').innerHTML=v();
+ window.scrollTo({top:0});
+}
+load();render();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></body></html>
