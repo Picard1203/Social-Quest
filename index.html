@@ -525,7 +525,8 @@ const TIERS=[{k:0,n:"Scout",i:"🥾",xp:30,h:"comfortable"},{k:1,n:"Knight",i:"�
 const XPC=30,XPJ=20,XPK=40,XPP=10;
 const LV=[[0,"Villager","🏠"],[250,"Apprentice","📜"],[600,"Scout","🗺️"],[1100,"Journeyman","🗡️"],[1750,"Knight","🛡️"],[2600,"Champion","⚔️"],[3600,"Sage","📖"],[4800,"Archmage","🔮"],[6200,"Hero","🌟"],[7800,"Legend","👑"]];
 const KEY='sq-v6';
-const DEF_MODEL='gemini-2.0-flash';
+const DEF_MODEL='gemini-flash-latest';
+const CHAIN=['gemini-flash-latest','gemini-flash-lite-latest','gemini-3.5-flash','gemini-3.1-flash-lite','gemini-2.5-flash'];
 const DEF_SYS=`You are the coach inside Social Quest, a self-paced app that trains social and romantic skill from first principles.
 
 How the app works: 15 arcs, 101 steps. Each step is one piece of researched content (a podcast episode, an audiobook section, a talk) plus a real-world mission offered in three tiers — Scout (comfortable), Knight (a stretch), Dragon (brave). Any tier completes the step fully; choosing Scout on a hard day is a legitimate choice, not a failure. There are no streaks and no penalties, because the user serves on an army base and weeks can vanish. After a mission he writes a short debrief. You read that debrief.
@@ -546,10 +547,15 @@ His journal entries from this arc:
 {{context}}
 In under 160 words: surface one or two genuine patterns across these entries — real growth, a recurring fear, or a blind spot — quoting his own words briefly as evidence. Then give one specific thing to carry into the next arc. Be honest rather than flattering; if the entries show avoidance, say so kindly.`;
 const blank=()=>({v:6,xp:0,days:0,last:null,done:[],miss:{},jr:{},pred:[],cps:[],sk:{},un:0,key:'',model:DEF_MODEL,models:[],sys:DEF_SYS,tplD:DEF_TPLD,tplA:DEF_TPLA,ctx:1,temp:0.7,cap:15,calls:{d:'',n:0},tab:'quest',view:0});
-function classify(n){if(/flash-lite|lite/i.test(n))return['Lite','#56b88a','cheapest, plenty for coaching'];
- if(/flash/i.test(n))return['Flash','#e2b340','recommended — fast and cheap'];
- if(/pro|ultra|thinking/i.test(n))return['Heavy','#eb6f92','costly, tight free limits'];
- return['Other','#8a879e','unknown cost'];}
+function classify(n){
+ if(/-latest$/i.test(n))return['Auto','#56b88a','Google-maintained alias — always points at their current model'];
+ if(/gemini-(1\.|2\.0)/i.test(n))return['Retired','#eb6f92','shut down by Google — will fail'];
+ if(/gemini-2\.5/i.test(n))return['Legacy','#f0a05a','older generation — blocked for keys created recently'];
+ if(/pro|ultra/i.test(n))return['Heavy','#eb6f92','reasoning model — costly, very tight limits'];
+ if(/flash-lite|lite/i.test(n))return['Lite','#56b88a','cheapest current model'];
+ if(/flash/i.test(n))return['Flash','#e2b340','current flash class — good fit here'];
+ return['Other','#8a879e','unknown — test before relying on it'];}
+const dead=m=>/no longer available|not found|not supported|does not exist|deprecated/i.test(m||'');
 function callsToday(){const t=new Date().toISOString().slice(0,10);if(D.calls.d!==t){D.calls={d:t,n:0};}return D.calls.n;}
 let D=blank(),VIEW=0,TAB='quest',jrTmp='',pP=0,pA=0,cpv={a:5,b:5,c:5},AIO={},busy=null;
 
@@ -569,26 +575,41 @@ function doJournal(i){const v=document.getElementById('jr').value.trim();if(!v)r
 function doCP(i){if(D.cps.some(c=>c.s===i))return;touch();D.cps.push({s:i,a:cpv.a,b:cpv.b,c:cpv.c,d:Date.now()});gain(XPK);if(i+1>D.un&&i+1<S.length)D.un=i+1;save();toast('+'+XPK+' XP — checkpoint recorded 📊');render();}
 
 const API='https://generativelanguage.googleapis.com/v1beta/';
+async function callGem(model,prompt){
+ const r=await fetch(API+'models/'+encodeURIComponent(model)+':generateContent?key='+encodeURIComponent(D.key),
+  {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    systemInstruction:{parts:[{text:D.sys||DEF_SYS}]},
+    contents:[{role:'user',parts:[{text:prompt}]}],
+    generationConfig:{temperature:D.temp??0.7,maxOutputTokens:600,topP:0.95}
+  })});
+ return r.json();
+}
 async function gem(prompt,slot){
  if(!D.key){toast('Add a Gemini key in Setup first');TAB='set';render();return;}
  const used=callsToday();
  if(used>=(D.cap||15)){toast('Daily coach limit reached ('+used+'). Raise it in Setup if you want more.');return;}
  const cls=classify(D.model||DEF_MODEL);
- if(cls[0]==='Heavy'&&!confirm('You are using '+D.model+', a heavy model. These burn free-tier quota fast and cost more when billed.\n\nContinue with this call?'))return;
+ if(cls[0]==='Heavy'&&!confirm('You are using '+D.model+' — '+cls[2]+'.\n\nThis app only needs short answers, so a flash model does the same job for far less quota.\n\nContinue?'))return;
  D.calls.n=used+1;save();
  busy=slot;render();
+ const queue=[D.model||DEF_MODEL].concat(CHAIN.filter(m=>m!==(D.model||DEF_MODEL)));
+ let out=null,n=0;
  try{
-  const r=await fetch(API+'models/'+encodeURIComponent(D.model||DEF_MODEL)+':generateContent?key='+encodeURIComponent(D.key),
-   {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-     systemInstruction:{parts:[{text:D.sys||DEF_SYS}]},
-     contents:[{role:'user',parts:[{text:prompt}]}],
-     generationConfig:{temperature:D.temp??0.7,maxOutputTokens:600,topP:0.95}
-   })});
-  const j=await r.json();
-  if(j?.error){AIO[slot]='⚠️ '+j.error.message+(/not found|not supported/i.test(j.error.message)?'\n\nTry Setup → Refresh models and pick another one.':'');}
-  else AIO[slot]=(j?.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim()||'⚠️ Empty response — try again.';
- }catch(e){AIO[slot]='⚠️ Could not reach the coach. Check your connection, or the key in Setup.';}
- busy=null;render();
+  for(const m of queue){
+   n++;
+   const j=await callGem(m,prompt);
+   if(j&&j.error){
+    if(dead(j.error.message)&&n<queue.length)continue;
+    out='⚠️ '+j.error.message;break;
+   }
+   const parts=(j&&j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts)||[];
+   const txt=parts.map(p=>p.text||'').join('').trim();
+   if(txt){out=txt;if(m!==D.model){D.model=m;save();toast('Switched to a working model: '+m);}break;}
+   out='⚠️ Empty response — try again.';break;
+  }
+  if(out===null)out='⚠️ No model in the fallback chain responded. Check your key in Setup.';
+ }catch(e){out='⚠️ Could not reach Google. Check your connection.';}
+ AIO[slot]=out;busy=null;render();
 }
 function pickModel(m,el){
  if(!m)return;
@@ -599,6 +620,19 @@ function pickModel(m,el){
   }
  }
  D.model=m;save();render();toast('Model: '+m);
+}
+async function findModel(){
+ if(!D.key){toast('Add a key first');return;}
+ D.probe={};busy='pr';render();
+ for(const m of CHAIN){
+  try{
+   const j=await callGem(m,'hi');
+   if(j&&j.error){D.probe[m]=dead(j.error.message)?'gone':(/quota|rate/i.test(j.error.message)?'quota':'fail');}
+   else{D.probe[m]='ok';D.model=m;save();render();toast('✅ Using '+m);busy=null;return;}
+  }catch(e){D.probe[m]='fail';}
+  save();render();
+ }
+ busy=null;render();toast('⚠️ Nothing in the chain worked — check the key');
 }
 async function listModels(){
  if(!D.key){toast('Add a key first');return;}
@@ -809,7 +843,7 @@ function statsView(){
 function setView(){
  return `<div class="sec">Setup</div>
  <div class="card"><div class="lbl">🧠 AI COACH — KEY</div>
- <p class="note" style="margin:8px 0">The debrief coach and arc insights run on Google's Gemini. Get a free key at <b>aistudio.google.com</b> → Get API key → Create API key. Your key is stored only on this device and goes nowhere except directly to Google.</p>
+ <p class="note" style="margin:8px 0">The debrief coach and arc insights run on Google's Gemini. Get a key at <b>aistudio.google.com</b> → Get API key → Create API key. Create a <b>fresh</b> key: Google now issues auth keys, and older standard keys stop working entirely in September 2026. Your key is stored only on this device and goes nowhere except directly to Google.</p>
  <p class="note" style="margin:0 0 10px"><b style="color:var(--acc)">Privacy:</b> on the free tier Google may use content to improve their products. Your journal is personal — attaching the key to a billed Cloud project (your AI Pro subscription includes monthly credits) puts you on the paid tier, where content is not used for training.</p>
  <input id="gk" type="password" placeholder="Paste Gemini API key" value="${esc(D.key||'')}">
  <div style="margin-top:8px"><button class="sm" onclick="D.key=document.getElementById('gk').value.trim();save();toast(D.key?'Key saved':'Key cleared');render()">Save key</button>
@@ -817,20 +851,25 @@ function setView(){
  ${AIO['test']?`<div class="ai">${esc(AIO['test'])}</div><div class="note" style="margin-top:6px">Sample run on a fake debrief. Tune the prompts below until this sounds right.</div>`:''}</div>
 
  <div class="card"><div class="lbl">🤖 MODEL</div>
- <p class="note" style="margin:8px 0">Models change over time, so the list comes from Google rather than being baked in. <b style="color:var(--grn)">Stay on Flash or Lite</b> — this app sends short prompts and asks for short answers, so a heavier model costs far more without writing better coaching.</p>
- ${(()=>{const c=classify(D.model||DEF_MODEL);return `<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+ <p class="note" style="margin:8px 0">The default is <b style="color:var(--grn)">gemini-flash-latest</b> — an alias Google maintains and repoints at their current model, so it does not go stale. If a call ever fails because a model is gone, the app silently retries down a fallback chain and keeps whichever works. You should never need to touch this.</p>
+ ${(()=>{const c=classify(D.model||DEF_MODEL);const st=D.probe&&D.probe[D.model];return `<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
   <span class="badge" style="background:${c[1]}22;color:${c[1]}">${c[0]}</span>
-  <span style="font-size:13px">${esc(D.model||DEF_MODEL)}</span></div>
+  <span style="font-size:13px">${esc(D.model||DEF_MODEL)}</span>
+  ${st?`<span style="font-size:13px">${st==='ok'?'✅':st==='quota'?'⏳':'❌'}</span>`:''}</div>
   <div class="note" style="margin-bottom:8px">${c[2]}</div>`;})()}
  ${D.models&&D.models.length?(()=>{
-   const g={Lite:[],Flash:[],Heavy:[],Other:[]};D.models.forEach(m=>g[classify(m)[0]].push(m));
-   const grp=(k,lbl)=>g[k].length?`<optgroup label="${lbl}">${g[k].map(m=>`<option value="${esc(m)}" ${D.model===m?'selected':''}>${esc(m)}</option>`).join('')}</optgroup>`:'';
+   const g={Auto:[],Flash:[],Lite:[],Heavy:[],Legacy:[],Other:[],Retired:[]};D.models.forEach(m=>g[classify(m)[0]].push(m));
+   const mark=m=>{const s=D.probe&&D.probe[m];return s==='ok'?'✅ ':s==='quota'?'⏳ ':s?'❌ ':'';};
+   const grp=(k,lbl)=>g[k].length?`<optgroup label="${lbl}">${g[k].map(m=>`<option value="${esc(m)}" ${D.model===m?'selected':''}>${mark(m)}${esc(m)}</option>`).join('')}</optgroup>`:'';
    return `<select style="width:100%" onchange="pickModel(this.value,this)">
-    ${grp('Flash','✅ Recommended — Flash')}${grp('Lite','✅ Cheapest — Lite')}${grp('Heavy','⚠️ Heavy — costs much more')}${grp('Other','❔ Unclassified')}</select>`;})()
+    ${grp('Auto','✅ Auto-updating aliases — recommended')}${grp('Flash','Flash class')}${grp('Lite','Lite class — cheapest')}${grp('Heavy','⚠️ Heavy reasoning — costly')}${grp('Legacy','⚠️ Legacy — blocked for new keys')}${grp('Other','❔ Unclassified')}${grp('Retired','⛔ Retired by Google')}</select>`;})()
   :`<input id="mm" placeholder="model id" value="${esc(D.model||DEF_MODEL)}"><div class="note" style="margin-top:6px">No list loaded yet.</div>`}
- <div style="margin-top:8px"><button class="sm" onclick="listModels()" ${busy==='ml'?'disabled':''}>${busy==='ml'?'asking Google…':'🔄 Refresh models'}</button>
- <button class="sm" onclick="D.model=DEF_MODEL;save();render();toast('Back to the safe default')">↩︎ Safe default</button>
- ${!(D.models&&D.models.length)?`<button class="sm" onclick="pickModel(document.getElementById('mm').value.trim())">Save model</button>`:''}</div>
+ <div style="margin-top:8px"><button class="sm" onclick="listModels()" ${busy?'disabled':''}>${busy==='ml'?'asking Google…':'🔄 Refresh list'}</button>
+ <button class="sm" onclick="findModel()" ${busy?'disabled':''}>${busy==='pr'?'finding…':'🧪 Find a working model'}</button>
+ <button class="sm" onclick="D.model=DEF_MODEL;save();render();toast('Back to the safe default')">↩︎ Default</button></div>
+ ${D.probe&&Object.keys(D.probe).length?`<div class="note" style="margin-top:10px">
+  ${Object.keys(D.probe).map(m=>`<div>${D.probe[m]==='ok'?'✅':D.probe[m]==='quota'?'⏳':D.probe[m]==='paid'?'💳':'❌'} ${esc(m)} <span style="color:var(--mut)">${D.probe[m]==='ok'?'works':D.probe[m]==='quota'?'quota exhausted':D.probe[m]==='gone'?'retired / not for new keys':'unavailable'}</span></div>`).join('')}
+  <div style="margin-top:6px;color:var(--mut)">Stops at the first model that answers, so this costs one or two tiny requests, not a sweep.</div></div>`:''}
  <div class="note" style="margin-top:8px">Creativity: <b style="color:var(--gold)">${(D.temp??0.7).toFixed(1)}</b>
  <input type="range" min="0" max="1" step="0.1" value="${D.temp??0.7}" oninput="D.temp=+this.value;save();this.previousElementSibling.textContent=(+this.value).toFixed(1)"></div></div>
 
