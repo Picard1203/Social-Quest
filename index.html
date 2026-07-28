@@ -525,7 +525,32 @@ const TIERS=[{k:0,n:"Scout",i:"🥾",xp:30,h:"comfortable"},{k:1,n:"Knight",i:"�
 const XPC=30,XPJ=20,XPK=40,XPP=10;
 const LV=[[0,"Villager","🏠"],[250,"Apprentice","📜"],[600,"Scout","🗺️"],[1100,"Journeyman","🗡️"],[1750,"Knight","🛡️"],[2600,"Champion","⚔️"],[3600,"Sage","📖"],[4800,"Archmage","🔮"],[6200,"Hero","🌟"],[7800,"Legend","👑"]];
 const KEY='sq-v6';
-const blank=()=>({v:6,xp:0,days:0,last:null,done:[],miss:{},jr:{},pred:[],cps:[],sk:{},un:0,key:'',tab:'quest',view:0});
+const DEF_MODEL='gemini-2.0-flash';
+const DEF_SYS=`You are the coach inside Social Quest, a self-paced app that trains social and romantic skill from first principles.
+
+How the app works: 15 arcs, 101 steps. Each step is one piece of researched content (a podcast episode, an audiobook section, a talk) plus a real-world mission offered in three tiers — Scout (comfortable), Knight (a stretch), Dragon (brave). Any tier completes the step fully; choosing Scout on a hard day is a legitimate choice, not a failure. There are no streaks and no penalties, because the user serves on an army base and weeks can vanish. After a mission he writes a short debrief. You read that debrief.
+
+The arcs run: recalibrating his self-image, listening, conversation craft, presence and charisma, inner game and emotion regulation, vulnerability, building communities, being well alone, the science of attraction, courtship, attachment, choosing a partner, intimacy, recognising bad relationships, and what makes love last.
+
+Who he is: a young analytical software engineer in the Israeli army, a lifelong geek, who has not dated and is deliberately learning this like an engineering discipline. He values evidence, distrusts flattery, and responds well to being treated as capable rather than fragile.
+
+Your voice: warm, direct, concrete, specific. No headers, no bullet lists, no markdown — plain prose only. Never invent details he did not write. Never praise generically. If he writes in Hebrew, reply entirely in Hebrew.`;
+const DEF_TPLD=`Step: {{step}} ({{source}})
+Mission he completed ({{tier}} tier): {{mission}}
+His debrief: {{entry}}
+{{context}}
+In under 120 words: name one specific thing he did well, quoting his own words back to him; give one small concrete thing to try next time; and close with one encouraging observation grounded in social psychology (the liking gap, perceived partner responsiveness, mere exposure, graded exposure, attachment). Nothing else.`;
+const DEF_TPLA=`Arc just completed: {{arc}}
+His journal entries from this arc:
+{{entries}}
+{{context}}
+In under 160 words: surface one or two genuine patterns across these entries — real growth, a recurring fear, or a blind spot — quoting his own words briefly as evidence. Then give one specific thing to carry into the next arc. Be honest rather than flattering; if the entries show avoidance, say so kindly.`;
+const blank=()=>({v:6,xp:0,days:0,last:null,done:[],miss:{},jr:{},pred:[],cps:[],sk:{},un:0,key:'',model:DEF_MODEL,models:[],sys:DEF_SYS,tplD:DEF_TPLD,tplA:DEF_TPLA,ctx:1,temp:0.7,cap:15,calls:{d:'',n:0},tab:'quest',view:0});
+function classify(n){if(/flash-lite|lite/i.test(n))return['Lite','#56b88a','cheapest, plenty for coaching'];
+ if(/flash/i.test(n))return['Flash','#e2b340','recommended — fast and cheap'];
+ if(/pro|ultra|thinking/i.test(n))return['Heavy','#eb6f92','costly, tight free limits'];
+ return['Other','#8a879e','unknown cost'];}
+function callsToday(){const t=new Date().toISOString().slice(0,10);if(D.calls.d!==t){D.calls={d:t,n:0};}return D.calls.n;}
 let D=blank(),VIEW=0,TAB='quest',jrTmp='',pP=0,pA=0,cpv={a:5,b:5,c:5},AIO={},busy=null;
 
 function load(){try{const r=localStorage.getItem(KEY);if(r){const p=JSON.parse(r);D=Object.assign(blank(),p);}}catch(e){}VIEW=D.un;}
@@ -543,26 +568,85 @@ function doMission(i,k){if(D.miss[i]!==undefined)return;touch();D.miss[i]=k;cons
 function doJournal(i){const v=document.getElementById('jr').value.trim();if(!v)return;touch();const isNew=!D.jr[i];D.jr[i]=v;if(isNew)gain(XPJ);save();toast(isNew?'+20 XP — logged 📝':'Entry updated');render();}
 function doCP(i){if(D.cps.some(c=>c.s===i))return;touch();D.cps.push({s:i,a:cpv.a,b:cpv.b,c:cpv.c,d:Date.now()});gain(XPK);if(i+1>D.un&&i+1<S.length)D.un=i+1;save();toast('+'+XPK+' XP — checkpoint recorded 📊');render();}
 
+const API='https://generativelanguage.googleapis.com/v1beta/';
 async function gem(prompt,slot){
- if(!D.key){toast('Add a Gemini key in Settings first');return;}
+ if(!D.key){toast('Add a Gemini key in Setup first');TAB='set';render();return;}
+ const used=callsToday();
+ if(used>=(D.cap||15)){toast('Daily coach limit reached ('+used+'). Raise it in Setup if you want more.');return;}
+ const cls=classify(D.model||DEF_MODEL);
+ if(cls[0]==='Heavy'&&!confirm('You are using '+D.model+', a heavy model. These burn free-tier quota fast and cost more when billed.\n\nContinue with this call?'))return;
+ D.calls.n=used+1;save();
  busy=slot;render();
  try{
-  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(D.key),
-   {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
+  const r=await fetch(API+'models/'+encodeURIComponent(D.model||DEF_MODEL)+':generateContent?key='+encodeURIComponent(D.key),
+   {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+     systemInstruction:{parts:[{text:D.sys||DEF_SYS}]},
+     contents:[{role:'user',parts:[{text:prompt}]}],
+     generationConfig:{temperature:D.temp??0.7,maxOutputTokens:600,topP:0.95}
+   })});
   const j=await r.json();
-  AIO[slot]=j?.candidates?.[0]?.content?.parts?.[0]?.text||('⚠️ '+(j?.error?.message||'No response'));
- }catch(e){AIO[slot]='⚠️ Could not reach the coach. Check connection or key.';}
+  if(j?.error){AIO[slot]='⚠️ '+j.error.message+(/not found|not supported/i.test(j.error.message)?'\n\nTry Setup → Refresh models and pick another one.':'');}
+  else AIO[slot]=(j?.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim()||'⚠️ Empty response — try again.';
+ }catch(e){AIO[slot]='⚠️ Could not reach the coach. Check your connection, or the key in Setup.';}
  busy=null;render();
+}
+function pickModel(m,el){
+ if(!m)return;
+ const c=classify(m);
+ if(c[0]==='Heavy'||c[0]==='Other'){
+  if(!confirm('⚠️ '+m+'\n\nThis is a '+c[0].toLowerCase()+' model — '+c[2]+'.\n\nSocial Quest only needs short answers, so a Flash model does the same job for a fraction of the quota. Switch anyway?')){
+   if(el)el.value=D.model; return;
+  }
+ }
+ D.model=m;save();render();toast('Model: '+m);
+}
+async function listModels(){
+ if(!D.key){toast('Add a key first');return;}
+ busy='ml';render();
+ try{
+  const r=await fetch(API+'models?key='+encodeURIComponent(D.key)+'&pageSize=100');
+  const j=await r.json();
+  if(j?.error){toast('⚠️ '+j.error.message);}
+  else{
+   D.models=(j.models||[])
+    .filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent'))
+    .map(m=>m.name.replace(/^models\//,''))
+    .filter(n=>!/embedding|aqa|imagen|veo|tts/i.test(n))
+    .sort();
+   if(D.models.length&&!D.models.includes(D.model))D.model=D.models.find(n=>/flash/.test(n))||D.models[0];
+   save();toast(D.models.length+' models found');
+  }
+ }catch(e){toast('⚠️ Could not reach Google');}
+ busy=null;render();
+}
+function testCoach(){
+ gem(fill(D.tplD||DEF_TPLD,{step:'How Others See You',source:'Hidden Brain — Erica Boothby',tier:'Knight',
+  mission:'Ask one person you don\'t usually talk to a question about themselves.',
+  entry:'Asked the guy at the canteen counter what he did before the army. He talked for two minutes, seemed pleased. I felt stupid for about three seconds beforehand and then it was completely normal. Weird how big it felt in my head.',
+  context:''}),'test');
+}
+function fill(t,o){return String(t).replace(/\{\{(\w+)\}\}/g,(m,k)=>o[k]!==undefined?o[k]:'');}
+function ctxBlock(i){
+ if(!D.ctx)return'';
+ const bits=[];
+ const c=D.cps[D.cps.length-1];
+ if(c)bits.push(`His most recent self-ratings (1-10): comfort in conversation ${c.a}, listening and presence ${c.b}, confidence around women ${c.c}.`);
+ const prev=Object.keys(D.jr).map(Number).filter(k=>k<i).sort((a,b)=>b-a).slice(0,2).reverse();
+ if(prev.length)bits.push('Earlier debriefs for trajectory:\n'+prev.map(k=>`- ${S[k].t}: ${D.jr[k]}`).join('\n'));
+ const p=D.pred.slice(-4);
+ if(p.length)bits.push(`Recent predicted vs actual discomfort: ${p.map(x=>x.p+'→'+x.a).join(', ')}.`);
+ return bits.length?'\nBackground (do not summarise this back to him, just let it inform you):\n'+bits.join('\n')+'\n':'';
 }
 function debrief(i){
  const e=D.jr[i];if(!e){toast('Write a debrief first — the coach reads it');return;}
- const k=D.miss[i];const m=k!==undefined?S[i].m[k]:'(mission not yet done)';
- gem(`You are a warm, direct social-skills coach inside a self-development app. The user is a young analytical software engineer in the Israeli army, a proud geek, rebuilding social and romantic confidence from first principles. Step: "${S[i].t}" (${S[i].s}). Mission he did: "${m}". His debrief: "${e}". In under 120 words of plain prose, no headers or lists: name one specific thing he did well quoting his own words; give one small concrete thing to try next; add one encouraging observation grounded in social psychology (liking gap, responsiveness, exposure, attachment). Never invent details he didn't write. If his entry is in Hebrew, reply in Hebrew.`,'d'+i);
+ const k=D.miss[i];
+ gem(fill(D.tplD||DEF_TPLD,{step:S[i].t,source:S[i].s,tier:k!==undefined?TIERS[k].n:'none yet',
+  mission:k!==undefined?S[i].m[k]:'(mission not yet completed)',entry:e,context:ctxBlock(i)}),'d'+i);
 }
 function arcInsight(a){
- const es=S.map((s,i)=>[s,i]).filter(([s,i])=>s.a===a&&D.jr[i]).map(([s,i])=>`${s.t}: ${D.jr[i]}`);
+ const es=S.map((s,i)=>[s,i]).filter(([s,i])=>s.a===a&&D.jr[i]).map(([s,i])=>`- ${s.t}: ${D.jr[i]}`);
  if(!es.length){toast('No journal entries in this arc yet');return;}
- gem(`You are a reflective coach reading a training journal. Arc: "${ARCS[a].n}". Entries:\n${es.join('\n---\n')}\n\nIn under 160 words of plain prose: surface one or two genuine patterns across the entries (growth, a recurring fear, a blind spot), quoting his words briefly; then one specific suggestion for the next arc. Honest and warm, never flattering for its own sake. Never invent events. If the entries are in Hebrew, reply in Hebrew.`,'a'+a);
+ gem(fill(D.tplA||DEF_TPLA,{arc:ARCS[a].n+' — '+ARCS[a].tag,entries:es.join('\n'),context:ctxBlock(1e9)}),'a'+a);
 }
 
 function exportData(){
@@ -724,11 +808,56 @@ function statsView(){
 
 function setView(){
  return `<div class="sec">Setup</div>
- <div class="card"><div class="lbl">🧠 AI COACH</div>
- <p class="note" style="margin:8px 0">The debrief coach and arc insights run on Google's Gemini. Paste a key from Google AI Studio (free to create). Your key is stored only on this device and never leaves it except to call Google directly.</p>
- <p class="note" style="margin:0 0 10px"><b style="color:var(--acc)">Privacy note:</b> on Google's free tier, content may be used to improve their products. Your journal is personal — if you have Cloud credits from an AI Pro subscription, billing the key against those puts you on the paid tier, where content is not used for training.</p>
- <input id="gk" type="password" placeholder="Gemini API key" value="${esc(D.key||'')}">
- <div style="margin-top:8px"><button class="sm" onclick="D.key=document.getElementById('gk').value.trim();save();toast(D.key?'Key saved':'Key cleared');render()">Save key</button></div></div>
+ <div class="card"><div class="lbl">🧠 AI COACH — KEY</div>
+ <p class="note" style="margin:8px 0">The debrief coach and arc insights run on Google's Gemini. Get a free key at <b>aistudio.google.com</b> → Get API key → Create API key. Your key is stored only on this device and goes nowhere except directly to Google.</p>
+ <p class="note" style="margin:0 0 10px"><b style="color:var(--acc)">Privacy:</b> on the free tier Google may use content to improve their products. Your journal is personal — attaching the key to a billed Cloud project (your AI Pro subscription includes monthly credits) puts you on the paid tier, where content is not used for training.</p>
+ <input id="gk" type="password" placeholder="Paste Gemini API key" value="${esc(D.key||'')}">
+ <div style="margin-top:8px"><button class="sm" onclick="D.key=document.getElementById('gk').value.trim();save();toast(D.key?'Key saved':'Key cleared');render()">Save key</button>
+ <button class="sm" onclick="testCoach()" ${busy==='test'?'disabled':''}>${busy==='test'?'testing…':'🧪 Test the coach'}</button></div>
+ ${AIO['test']?`<div class="ai">${esc(AIO['test'])}</div><div class="note" style="margin-top:6px">Sample run on a fake debrief. Tune the prompts below until this sounds right.</div>`:''}</div>
+
+ <div class="card"><div class="lbl">🤖 MODEL</div>
+ <p class="note" style="margin:8px 0">Models change over time, so the list comes from Google rather than being baked in. <b style="color:var(--grn)">Stay on Flash or Lite</b> — this app sends short prompts and asks for short answers, so a heavier model costs far more without writing better coaching.</p>
+ ${(()=>{const c=classify(D.model||DEF_MODEL);return `<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+  <span class="badge" style="background:${c[1]}22;color:${c[1]}">${c[0]}</span>
+  <span style="font-size:13px">${esc(D.model||DEF_MODEL)}</span></div>
+  <div class="note" style="margin-bottom:8px">${c[2]}</div>`;})()}
+ ${D.models&&D.models.length?(()=>{
+   const g={Lite:[],Flash:[],Heavy:[],Other:[]};D.models.forEach(m=>g[classify(m)[0]].push(m));
+   const grp=(k,lbl)=>g[k].length?`<optgroup label="${lbl}">${g[k].map(m=>`<option value="${esc(m)}" ${D.model===m?'selected':''}>${esc(m)}</option>`).join('')}</optgroup>`:'';
+   return `<select style="width:100%" onchange="pickModel(this.value,this)">
+    ${grp('Flash','✅ Recommended — Flash')}${grp('Lite','✅ Cheapest — Lite')}${grp('Heavy','⚠️ Heavy — costs much more')}${grp('Other','❔ Unclassified')}</select>`;})()
+  :`<input id="mm" placeholder="model id" value="${esc(D.model||DEF_MODEL)}"><div class="note" style="margin-top:6px">No list loaded yet.</div>`}
+ <div style="margin-top:8px"><button class="sm" onclick="listModels()" ${busy==='ml'?'disabled':''}>${busy==='ml'?'asking Google…':'🔄 Refresh models'}</button>
+ <button class="sm" onclick="D.model=DEF_MODEL;save();render();toast('Back to the safe default')">↩︎ Safe default</button>
+ ${!(D.models&&D.models.length)?`<button class="sm" onclick="pickModel(document.getElementById('mm').value.trim())">Save model</button>`:''}</div>
+ <div class="note" style="margin-top:8px">Creativity: <b style="color:var(--gold)">${(D.temp??0.7).toFixed(1)}</b>
+ <input type="range" min="0" max="1" step="0.1" value="${D.temp??0.7}" oninput="D.temp=+this.value;save();this.previousElementSibling.textContent=(+this.value).toFixed(1)"></div></div>
+
+ <div class="card"><div class="lbl">🛡️ USAGE GUARD</div>
+ <p class="note" style="margin:8px 0">A hard stop so a stuck finger can never drain your quota. Coach calls used today: <b style="color:var(--gold)">${callsToday()}</b> of ${D.cap||15}.</p>
+ <div class="note">Daily limit: <b style="color:var(--gold)">${D.cap||15}</b>
+ <input type="range" min="3" max="50" step="1" value="${D.cap||15}" oninput="D.cap=+this.value;save();this.previousElementSibling.textContent=this.value"></div>
+ <p class="note" style="margin:8px 0 0">Realistically you'll use one or two a day — one debrief per mission. Fifteen is already generous.</p></div>
+
+ <div class="card"><div class="lbl">✍️ COACH INSTRUCTIONS</div>
+ <p class="note" style="margin:8px 0">This is the persona and the app context sent with every call. Tune it in AI Studio, then paste the winner here — no re-upload needed.</p>
+ <textarea id="sy" rows="7">${esc(D.sys||DEF_SYS)}</textarea>
+ <div style="margin-top:6px"><button class="sm" onclick="D.sys=document.getElementById('sy').value;save();toast('Saved')">Save</button>
+ <button class="sm" onclick="D.sys=DEF_SYS;save();render();toast('Restored default')">Reset</button></div>
+ <div class="lbl" style="margin-top:16px">DEBRIEF PROMPT</div>
+ <p class="note" style="margin:8px 0">Placeholders: {{step}} {{source}} {{tier}} {{mission}} {{entry}} {{context}}</p>
+ <textarea id="td" rows="6">${esc(D.tplD||DEF_TPLD)}</textarea>
+ <div style="margin-top:6px"><button class="sm" onclick="D.tplD=document.getElementById('td').value;save();toast('Saved')">Save</button>
+ <button class="sm" onclick="D.tplD=DEF_TPLD;save();render();toast('Restored default')">Reset</button></div>
+ <div class="lbl" style="margin-top:16px">ARC INSIGHT PROMPT</div>
+ <p class="note" style="margin:8px 0">Placeholders: {{arc}} {{entries}} {{context}}</p>
+ <textarea id="ta" rows="6">${esc(D.tplA||DEF_TPLA)}</textarea>
+ <div style="margin-top:6px"><button class="sm" onclick="D.tplA=document.getElementById('ta').value;save();toast('Saved')">Save</button>
+ <button class="sm" onclick="D.tplA=DEF_TPLA;save();render();toast('Restored default')">Reset</button></div>
+ <div class="lbl" style="margin-top:16px">CONTEXT</div>
+ <p class="note" style="margin:8px 0">When on, the coach also sees your latest checkpoint ratings, your two previous debriefs and recent prediction data — so it notices trajectory instead of judging each mission in isolation. More useful, more personal data sent per call.</p>
+ <button class="sm" onclick="D.ctx=D.ctx?0:1;save();render();toast(D.ctx?'Context on':'Context off')">${D.ctx?'✅ Context ON':'⬜ Context OFF'}</button></div>
  <div class="card"><div class="lbl">💾 BACKUP</div>
  <p class="note" style="margin:8px 0">Progress saves automatically on this device. iOS can clear storage when the phone is critically low on space, so export occasionally and keep the text somewhere safe.</p>
  <button class="sm" onclick="exportData()">Export backup</button><button class="sm" onclick="importData()">Import backup</button></div>
